@@ -1,0 +1,8 @@
+ascendo-os/node_modules/
+ascendo-os/dist/
+ascendo-os/.angular/
+.git/
+.DS_Store
+README.md
+index.html
+.nojekyll
