@@ -137,6 +137,11 @@
       justify-content: space-between;
     }
 
+    /* ───────────────────────────────────────────
+       Touch / Swipe support on mobile
+    ─────────────────────────────────────────── */
+    .slide-viewport { touch-action: pan-y; }
+
     /* Presentation Header */
     header {
       display: flex;
@@ -852,6 +857,154 @@
       filter: brightness(1.1);
       box-shadow: 0 0 20px rgba(0, 242, 254, 0.5);
     }
+
+    /* ═══════════════════════════════════════════
+       RESPONSIVE — Tablet  (≤ 900px)
+    ═══════════════════════════════════════════ */
+    @media (max-width: 900px) {
+      header {
+        padding: 16px 24px;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .header-info-badge { display: none; }
+
+      .slide-viewport { padding: 0 20px; }
+
+      .slide {
+        max-height: none;
+        position: relative;
+        opacity: 1;
+        transform: none;
+        pointer-events: auto;
+        display: none;
+        padding: 8px 0 16px;
+      }
+
+      .slide.active { display: flex; }
+
+      /* Typography */
+      .hero-tagline    { font-size: 2.2rem; }
+      .slide-title     { font-size: 1.6rem; }
+      .summary-heading { font-size: 1.4rem; }
+
+      /* Slide 1 */
+      .hero-art { width: 260px; height: 260px; }
+
+      /* Slide 2 */
+      .problem-grid { grid-template-columns: 1fr; gap: 16px; }
+
+      /* Slide 3 */
+      .flow-split {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+      .flow-diagram-container { height: 280px; }
+
+      /* Slide 4 */
+      .pillars-grid { grid-template-columns: 1fr; gap: 16px; }
+
+      /* Slide 5 */
+      .dual-pane-grid { grid-template-columns: 1fr; gap: 20px; }
+
+      /* Slide 6 */
+      .mockup-workspace {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+      .mockup-kanban-cols { grid-template-columns: repeat(2, 1fr); }
+
+      /* Slide 7 */
+      .summary-points-grid { grid-template-columns: 1fr; }
+
+      footer {
+        padding: 14px 24px;
+        flex-wrap: wrap;
+        gap: 12px;
+        justify-content: center;
+      }
+
+      .glass-panel { padding: 20px; }
+      .pane-card   { padding: 16px; }
+    }
+
+    /* ═══════════════════════════════════════════
+       RESPONSIVE — Mobile  (≤ 540px)
+    ═══════════════════════════════════════════ */
+    @media (max-width: 540px) {
+      body { overflow-y: auto; }
+
+      header { padding: 12px 16px; }
+
+      .subtitle { display: none; }
+
+      .slide-viewport {
+        padding: 0 12px;
+        align-items: flex-start;
+        overflow-y: auto;
+      }
+
+      .slide {
+        position: relative;
+        max-height: none;
+        height: auto;
+        padding-bottom: 24px;
+      }
+
+      /* Typography */
+      .hero-tagline    { font-size: 1.6rem; }
+      .slide-title     { font-size: 1.3rem; margin-bottom: 20px; }
+      .hero-desc       { font-size: 0.9rem; }
+      .summary-heading { font-size: 1.2rem; }
+      .summary-desc    { font-size: 0.85rem; }
+
+      .slide-header    { margin-bottom: 18px; }
+
+      /* Slide 1 — hide decorative art on phones */
+      .hero-art        { display: none; }
+      .hero-container  { justify-content: flex-start; }
+
+      /* Slide 2 */
+      .problem-quote   { font-size: 0.8rem; margin-top: 16px; }
+
+      /* Slide 3 — stack SVG diagram + bullets */
+      .flow-split      { gap: 16px; }
+      .flow-diagram-container { height: 220px; padding: 10px; }
+      .bullet-list     { gap: 10px; }
+      .bullet-text h5  { font-size: 0.85rem; }
+      .bullet-text p   { font-size: 0.75rem; }
+
+      /* Slide 4 */
+      .pillars-grid    { gap: 12px; }
+      .pillar-title    { font-size: 1rem; }
+
+      /* Slide 5 */
+      .pane-title      { font-size: 1rem; }
+      .dual-pane-grid  { gap: 14px; }
+
+      /* Slide 6 */
+      .mockup-kanban-cols { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+      .mockup-deck-pane   { display: none; }  /* simplify on phones */
+
+      /* Slide 7 */
+      .summary-points-grid { gap: 10px; }
+      .summary-point-card  { padding: 12px 14px; }
+
+      /* Footer */
+      footer {
+        padding: 10px 16px;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .slide-progress-dots { gap: 8px; }
+      .dot-nav { width: 8px; height: 8px; }
+      .nav-buttons { gap: 8px; }
+      .nav-btn { padding: 7px 14px; font-size: 0.76rem; }
+
+      /* Glass panels */
+      .glass-panel { padding: 16px; border-radius: 12px; }
+    }
   </style>
 </head>
 <body data-theme="light">
@@ -1363,6 +1516,26 @@
         prevSlide();
       }
     });
+
+    // Touch / Swipe support for mobile
+    let _touchStartX = 0;
+    let _touchStartY = 0;
+    const _viewport = document.querySelector('.slide-viewport');
+
+    _viewport.addEventListener('touchstart', (e) => {
+      _touchStartX = e.changedTouches[0].clientX;
+      _touchStartY = e.changedTouches[0].clientY;
+    }, { passive: true });
+
+    _viewport.addEventListener('touchend', (e) => {
+      const dx = e.changedTouches[0].clientX - _touchStartX;
+      const dy = Math.abs(e.changedTouches[0].clientY - _touchStartY);
+      // Only trigger if predominantly horizontal swipe (>50px, horizontal > vertical)
+      if (Math.abs(dx) > 50 && Math.abs(dx) > dy) {
+        if (dx < 0) nextSlide();
+        else prevSlide();
+      }
+    }, { passive: true });
 
     function togglePresentationTheme() {
       const body = document.body;
