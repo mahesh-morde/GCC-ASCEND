@@ -1,0 +1,220 @@
+<div class="governance-container">
+  <!-- Top Policy Overview -->
+  <div class="glass-panel policy-overview-card">
+    <h3 class="section-title">Active Consensus Policies</h3>
+    <div class="policy-list-grid">
+      <div class="policy-card glass-panel" *ngFor="let p of policies">
+        <div class="policy-card-header">
+          <span class="status-indicator status-active"></span>
+          <h5>{{ p.name }}</h5>
+        </div>
+        <p class="policy-desc">{{ p.description }}</p>
+        <div class="policy-footer">
+          <span>Required Signatures:</span>
+          <span class="sig-badge">{{ p.requiredSignatures }} Node{{ p.requiredSignatures > 1 ? 's' : '' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Split Console -->
+  <div class="gov-workspace">
+    <!-- Handshake Ledger Log -->
+    <div class="glass-panel ledger-card">
+      <h3 class="section-title">Decentralized Inter-Agent Handshake Ledger</h3>
+      <div class="ledger-table-wrapper">
+        <table class="ledger-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Task Context</th>
+              <th>Path (Initiator ➔ Validator)</th>
+              <th>Consensus Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let h of handshakes" (click)="selectHandshake(h.id)" [class.selected]="selectedHandshakeId === h.id">
+              <td class="time-col">{{ h.timestamp | date:'HH:mm:ss' }}</td>
+              <td class="title-col">{{ h.taskTitle }}</td>
+              <td class="path-col">
+                <div class="path-flow">
+                  <span class="agent-short-name">{{ h.initiatorName.split(' (')[0] }}</span>
+                  <span class="arrow-indicator">➔</span>
+                  <span class="agent-short-name">{{ h.targetName.split(' (')[0] }}</span>
+                </div>
+              </td>
+              <td class="status-col">
+                <span class="badge" [class.badge-low]="h.status === 'success'" [class.badge-high]="h.status === 'failed'">
+                  {{ h.status === 'success' ? 'POA_SUCCESS' : 'POA_FAILED' }}
+                </span>
+              </td>
+            </tr>
+            <tr *ngIf="handshakes.length === 0">
+              <td colspan="4" class="empty-row">No handshakes recorded yet. Dispatch a task to generate logs.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Right Side Details and Registry -->
+    <div class="details-pane">
+      <!-- Deck Tab Bar -->
+      <div class="deck-tabs glass-panel">
+        <button class="deck-tab-btn" [class.active]="activeGovTab === 'registry'" (click)="activeGovTab = 'registry'">
+          <svg viewBox="0 0 24 24" class="tab-icon"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2m8-10a4 4 0 100-8 4 4 0 000 8zm11 10v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg>
+          <span>Registry</span>
+        </button>
+        <button class="deck-tab-btn" [class.active]="activeGovTab === 'tester'" (click)="activeGovTab = 'tester'">
+          <svg viewBox="0 0 24 24" class="tab-icon"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span>Consensus Tester</span>
+        </button>
+        <button class="deck-tab-btn" [class.active]="activeGovTab === 'proof'" (click)="activeGovTab = 'proof'">
+          <svg viewBox="0 0 24 24" class="tab-icon"><path d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 009 11V5a2 2 0 00-2-2H4a2 2 0 00-2 2v6c0 4.103 1.947 7.75 4.965 10.03L9 11z"/></svg>
+          <span>Signature Proof</span>
+        </button>
+      </div>
+
+      <!-- Tab Content Area -->
+      <div class="deck-content-wrapper">
+        <!-- 1. Selected Handshake Audit Details -->
+        <div class="glass-panel handshake-detail-card" *ngIf="activeGovTab === 'proof'">
+          <h4 class="pane-subtitle">Handshake Signature Proof</h4>
+          <p class="deck-sub-desc" *ngIf="selectedHandshakeId">Audit PoA keys and ZKP verification tokens for consensus compliance.</p>
+          
+          <div class="detail-content" *ngIf="selectedHandshakeId && getSelectedHandshake() as hs">
+            <div class="detail-row">
+              <span class="detail-label">Handshake ID:</span>
+              <span class="detail-value mono-text select-all" (click)="copyToClipboard(hs.id)">{{ hs.id }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Task Context:</span>
+              <span class="detail-value">{{ hs.taskTitle }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Initiator Node:</span>
+              <span class="detail-value">{{ hs.initiatorName }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Verification Target:</span>
+              <span class="detail-value">{{ hs.targetName }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Human Delegator:</span>
+              <span class="detail-value mono-text">{{ hs.humanDelegatorName }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">ZKP Verification:</span>
+              <span class="detail-value" [style.color]="hs.zkpVerificationStatus === 'verified' ? 'var(--status-success)' : '#ef4444'" style="font-weight: 700;">
+                {{ hs.zkpVerificationStatus.toUpperCase() }}
+              </span>
+            </div>
+            <div class="detail-row" *ngIf="hs.zkpVerificationStatus === 'verified'">
+              <span class="detail-label">ZKP Proof Token:</span>
+              <span class="detail-value mono-text select-all" (click)="copyToClipboard(hs.zkpProofToken)">{{ hs.zkpProofToken }}</span>
+            </div>
+
+            <div class="signature-vault">
+              <h5 class="vault-title">Proof-of-Authority Signatures Collected</h5>
+              <div class="sig-scroller" *ngIf="hs.grantedSignatures.length > 0">
+                <div class="sig-box" *ngFor="let sig of hs.grantedSignatures">
+                  <div class="sig-meta">
+                    <span class="sig-signer">{{ sig.agentId.replace('-agent', '').toUpperCase() }} NODE</span>
+                    <span class="sig-time">{{ sig.timestamp | date:'HH:mm:ss' }}</span>
+                  </div>
+                  <div class="sig-hash mono-text select-all" (click)="copyToClipboard(sig.signature)" title="Click to copy signature token">
+                    {{ sig.signature }}
+                  </div>
+                </div>
+              </div>
+              <div class="sig-failed-box" *ngIf="hs.grantedSignatures.length === 0">
+                <span class="alert-icon">⚠️</span>
+                <p>CONSENSUS VERIFICATION BROKEN: Crucial validating nodes returned offline/quarantined status. Signature extraction failed.</p>
+              </div>
+            </div>
+            <p class="audit-statement" [class.danger]="hs.status === 'failed'">{{ hs.details }}</p>
+          </div>
+
+          <div class="no-handshake-selected" *ngIf="!selectedHandshakeId">
+            <p>Select an inter-agent handshake entry on the ledger to inspect cryptographic proofs.</p>
+          </div>
+        </div>
+
+        <!-- 2. Interactive Consensus Tester Simulator -->
+        <div class="glass-panel consensus-tester-card" *ngIf="activeGovTab === 'tester'">
+          <h4 class="pane-subtitle">Consensus Validation Tester</h4>
+          <p class="deck-sub-desc">Simulate swarm signature weight against policy thresholds to test block validations.</p>
+          
+          <div class="tester-content">
+            <div class="form-group">
+              <label for="testerPolicy">Select Policy Rule:</label>
+              <select id="testerPolicy" [(ngModel)]="testerPolicyId" class="form-select">
+                <option *ngFor="let p of policies" [value]="p.id">{{ p.name }}</option>
+              </select>
+            </div>
+
+            <div class="witness-checklist">
+              <label>Toggle Swarm Signatories:</label>
+              <div class="checkbox-grid">
+                <div class="checkbox-row" *ngFor="let a of agents" (click)="toggleTesterSignatory(a.id)">
+                  <div class="checkbox-box" [class.checked]="testerSignatories[a.id]">
+                    <svg *ngIf="testerSignatories[a.id]" viewBox="0 0 24 24" class="check-mark-svg"><path d="M5 13l4 4L19 7" /></svg>
+                  </div>
+                  <span class="checkbox-label">{{ a.name.split(' (')[0] }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Live Consensus Satisfaction Status Meter -->
+            <div class="consensus-outcome glass-panel" [class.satisfied]="isTesterConsensusSatisfied()">
+              <div class="outcome-header">
+                <span class="outcome-title">{{ isTesterConsensusSatisfied() ? 'CONSENSUS VERIFIED' : 'PENDING WITNESS' }}</span>
+                <span class="outcome-ratio">{{ getTesterSignatoryCount() }} / {{ getSelectedTesterPolicy()?.requiredSignatures }}</span>
+              </div>
+              
+              <div class="hash-box" *ngIf="isTesterConsensusSatisfied()">
+                <span class="hash-label">Consensus Block Proof Hash:</span>
+                <span class="hash-value mono-text">{{ getTesterStatusHash() }}</span>
+              </div>
+              <div class="hash-box" *ngIf="!isTesterConsensusSatisfied()">
+                <p class="outcome-error">Insufficient witness signatures collected. Block validation halted.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Agent Registry -->
+        <div class="glass-panel registry-card" *ngIf="activeGovTab === 'registry'">
+          <h4 class="pane-subtitle">Verified Agent Registry</h4>
+          <p class="deck-sub-desc">List cryptographic authority keys and verify active capability descriptors.</p>
+          
+          <div class="agent-scroller">
+            <div class="agent-registry-item glass-panel" *ngFor="let a of agents">
+              <div class="item-header">
+                <div class="name-status">
+                  <span class="status-indicator" [class.status-active]="a.status !== 'offline'" [class.status-danger]="a.status === 'offline'"></span>
+                  <h6>{{ a.name }}</h6>
+                </div>
+                <div class="header-badges">
+                  <span class="health-pill" [class.critical]="a.health < 50">{{ a.health }}% Health</span>
+                  <button class="revoke-node-btn" *ngIf="a.status !== 'offline'" (click)="revokeAgent(a.id, a.name)" title="Revoke node credentials in <1s">REVOKE</button>
+                </div>
+              </div>
+              <div class="item-body">
+                <div class="cred-row">
+                  <span class="cred-label">VC Authority Key:</span>
+                  <span class="cred-val mono-text select-all" (click)="copyToClipboard(getAgentKey(a.id))" title="Click to copy authority key">
+                    {{ getAgentKey(a.id) }}
+                  </span>
+                </div>
+                <div class="capabilities-box">
+                  <span class="cap-tag" *ngFor="let cap of a.capabilities">{{ cap }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,149 @@
+<div class="sentinel-container">
+  <!-- Top Charts Section -->
+  <div class="glass-panel analytics-card">
+    <div class="card-header-actions">
+      <h3 class="section-title">Sentinel Behavioral Heartbeat Monitoring</h3>
+      
+      <!-- Agent selector for charts -->
+      <div class="selector-container">
+        <label for="chartAgent">Monitor Node:</label>
+        <select id="chartAgent" [(ngModel)]="selectedChartAgentId" class="form-select inline-select">
+          <option *ngFor="let a of agents" [value]="a.id">{{ a.name.split(' (')[0] }}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Chart workspace -->
+    <div class="charts-workspace">
+      <!-- Digital Metrics Tally -->
+      <div class="digital-metrics-row">
+        <div class="digital-gauge glass-panel">
+          <span class="digital-label">Vulnerability Entropy</span>
+          <span class="digital-value neon-cyan-text">{{ getLatestMetricValue('entropy') }}</span>
+          <p class="digital-desc">Measures operational chaos in requests</p>
+        </div>
+        <div class="digital-gauge glass-panel">
+          <span class="digital-label">Consensus Latency</span>
+          <span class="digital-value neon-purple-text">{{ getLatestMetricValue('responseSpeed') }}</span>
+          <p class="digital-desc">Execution/response speed</p>
+        </div>
+        <div class="digital-gauge glass-panel" [class.anomaly-alert]="getLatestMetricValue('anomalyIndex') !== '0.0%' && getLatestMetricValue('anomalyIndex') !== '0%'">
+          <span class="digital-label">Anomaly Threat Index</span>
+          <span class="digital-value neon-red-text">{{ getLatestMetricValue('anomalyIndex') }}</span>
+          <p class="digital-desc">Deviation from behavioral signature</p>
+        </div>
+      </div>
+
+      <!-- SVG Chart Canvas -->
+      <div class="chart-canvas-wrapper glass-panel">
+        <div class="chart-legend">
+          <div class="legend-item"><span class="legend-dot entropy-dot"></span>Entropy</div>
+          <div class="legend-item"><span class="legend-dot anomaly-dot"></span>Anomaly Index</div>
+        </div>
+
+        <svg [attr.viewBox]="'0 0 ' + chartWidth + ' ' + chartHeight" class="sparkline-svg">
+          <!-- Grids -->
+          <line x1="0" y1="15" [attr.x2]="chartWidth" y2="15" stroke="rgba(128,128,128,0.15)" stroke-dasharray="3,3" />
+          <line x1="0" y1="60" [attr.x2]="chartWidth" y2="60" stroke="rgba(128,128,128,0.15)" stroke-dasharray="3,3" />
+          <line x1="0" y1="105" [attr.x2]="chartWidth" y2="105" stroke="rgba(128,128,128,0.15)" stroke-dasharray="3,3" />
+
+          <!-- Gradients -->
+          <defs>
+            <linearGradient id="entropyGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#00f2fe" stop-opacity="0.2" />
+              <stop offset="100%" stop-color="#00f2fe" stop-opacity="0.0" />
+            </linearGradient>
+            <linearGradient id="anomalyGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#f43f5e" stop-opacity="0.25" />
+              <stop offset="100%" stop-color="#f43f5e" stop-opacity="0.0" />
+            </linearGradient>
+          </defs>
+
+          <!-- Paths -->
+          <!-- Anomaly Area -->
+          <path *ngIf="getAnomalyPath()" [attr.d]="getAnomalyFillPath()" fill="url(#anomalyGrad)" />
+          
+          <!-- Entropy Line -->
+          <path [attr.d]="getEntropyPath()" fill="none" stroke="#00f2fe" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="graph-path" />
+          
+          <!-- Anomaly Line -->
+          <path [attr.d]="getAnomalyPath()" fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="graph-path" />
+        </svg>
+
+        <div class="empty-chart-text" *ngIf="getEntropyPath() === ''">
+          Establishing heartbeat metrics connections...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Splitted Bottom Controls -->
+  <div class="sentinel-bottom-grid">
+    <!-- Threat Injector Console -->
+    <div class="glass-panel exploit-card">
+      <h3 class="section-title">Sentinel Threat Testing Matrix</h3>
+      <p class="console-desc">Simulate common exploits against AI swarm agents to test fail-secure network containment.</p>
+
+      <form (submit)="triggerExploit()" class="exploit-form">
+        <div class="form-group">
+          <label for="injectTarget">Target Swarm Node</label>
+          <select id="injectTarget" [(ngModel)]="injectTargetAgentId" name="targetAgent" class="form-select">
+            <option *ngFor="let a of agents" [value]="a.id" [disabled]="quarantinedAgents.has(a.id)">
+              {{ a.name.split(' (')[0] }} {{ quarantinedAgents.has(a.id) ? '(MUTED)' : '' }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="exploitType">Exploit Payload Vector</label>
+          <select id="exploitType" [(ngModel)]="injectThreatType" name="threatType" class="form-select">
+            <option value="prompt-injection">Prompt Injection (System override attempt)</option>
+            <option value="signature-spoofing">Signature Spoofing (Cryptographic key mismatch)</option>
+            <option value="hallucination">AI Hallucination (Broken expense logic)</option>
+          </select>
+        </div>
+
+        <div class="btn-group">
+          <button type="submit" class="exploit-btn" [class.disabled]="quarantinedAgents.size === agents.length">INJECT EXPLOIT</button>
+          <button type="button" class="mitigate-btn" (click)="mitigateAll()" *ngIf="hasActiveThreat">MITIGATE ALL & SYNC</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Security Audit Log Table -->
+    <div class="glass-panel security-log-card">
+      <h3 class="section-title">Real-Time Threat Audit Logs</h3>
+      <div class="log-table-wrapper">
+        <table class="audit-log-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Node</th>
+              <th>Incident Type</th>
+              <th>Severity</th>
+              <th>Mitigation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let l of logs" [class.alert-row]="l.severity === 'critical' || l.severity === 'high'">
+              <td class="time-col">{{ l.timestamp | date:'HH:mm:ss' }}</td>
+              <td class="node-col">{{ getAgentName(l.agentId) }}</td>
+              <td class="type-col">
+                <span class="threat-label">{{ l.threatType.replace('-', ' ') || 'SYSTEM SYNC' }}</span>
+              </td>
+              <td class="severity-col">
+                <span class="badge" [class.badge-high]="l.severity === 'critical' || l.severity === 'high'" [class.badge-medium]="l.severity === 'medium'" [class.badge-low]="l.severity === 'low'">
+                  {{ l.severity }}
+                </span>
+              </td>
+              <td class="status-col">
+                <span class="status-indicator" [class.status-active]="l.status === 'resolved'" [class.status-danger]="l.status === 'quarantined'"></span>
+                <span class="status-text">{{ l.status === 'quarantined' ? 'QUARANTINED' : 'RESOLVED' }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

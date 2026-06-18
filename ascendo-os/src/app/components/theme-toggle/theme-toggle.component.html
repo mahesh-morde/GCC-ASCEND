@@ -1,0 +1,116 @@
+<div class="app-wrapper" [class.threat-alert-active]="hasActiveThreat">
+  <!-- Top Control Bar -->
+  <header class="app-header">
+    <div class="logo-area">
+      <img src="assets/logo.png" alt="AscendOS Logo" class="logo-img" style="height: 36px; object-fit: contain; border-radius: 4px;" />
+      <div class="title-container">
+        <h1>AscendOS</h1>
+        <span class="subtitle">Unified GCC Security Control Plane</span>
+      </div>
+    </div>
+
+    <!-- Real-time alarm banner -->
+    <div *ngIf="hasActiveThreat" class="alarm-banner">
+      <span class="pulse-indicator"></span>
+      <span class="alarm-text">THREAT DETECTED: SUSPICIOUS ACTIVITY INTERCEPTED. SYSTEMS IN SAFE LOCKDOWN.</span>
+      <button class="resolve-btn" (click)="resolveAlarm()">RESET SWARM</button>
+    </div>
+
+    <div class="header-actions">
+      <!-- Theme Switcher Button -->
+      <button class="action-btn theme-btn" (click)="toggleTheme()" title="Switch Theme Mode">
+        <svg viewBox="0 0 24 24" class="icon-svg">
+          <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m11.314 11.314l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+        </svg>
+        <span>{{ currentTheme === 'cyber-neon' ? 'Neon Tech' : currentTheme === 'amber-obsidian' ? 'Amber Gold' : 'Crystal Light' }}</span>
+      </button>
+
+      <!-- Swarm speed controls -->
+      <div class="sim-speed-pill">
+        <span class="speed-label">Orchestrator:</span>
+        <button class="speed-btn" [class.active]="simSpeed === 0" (click)="changeSpeed(0)" title="Pause Swarm">⏸</button>
+        <button class="speed-btn" [class.active]="simSpeed === 1" (click)="changeSpeed(1)" title="Normal Mode">1x</button>
+        <button class="speed-btn" [class.active]="simSpeed === 2" (click)="changeSpeed(2)" title="Turbo Mode">2x</button>
+      </div>
+
+      <!-- System Sync Status -->
+      <div class="status-pill">
+        <span class="status-indicator" [class.status-active]="!hasActiveThreat" [class.status-danger]="hasActiveThreat"></span>
+        <span class="status-text">{{ hasActiveThreat ? 'SAFE SECURE' : 'SECURE' }}</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Sidebar & Content Grid -->
+  <div class="main-container">
+    <aside class="sidebar">
+      <nav class="nav-menu">
+        <a routerLink="awos" routerLinkActive="active" class="nav-item">
+          <div class="icon-wrapper">
+            <svg viewBox="0 0 24 24" class="nav-icon">
+              <path d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </div>
+          <div class="nav-details">
+            <span class="nav-title">AWOS Console</span>
+            <span class="nav-desc">Human-AI Task Flow</span>
+          </div>
+          <span class="nav-badge" *ngIf="activeTally.pending > 0">{{ activeTally.pending }}</span>
+        </a>
+
+        <a routerLink="governance" routerLinkActive="active" class="nav-item">
+          <div class="icon-wrapper">
+            <svg viewBox="0 0 24 24" class="nav-icon">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </div>
+          <div class="nav-details">
+            <span class="nav-title">AGL Governance</span>
+            <span class="nav-desc">Proof-of-Authority</span>
+          </div>
+        </a>
+
+        <a routerLink="sentinel" routerLinkActive="active" class="nav-item">
+          <div class="icon-wrapper">
+            <svg viewBox="0 0 24 24" class="nav-icon">
+              <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <div class="nav-details">
+            <span class="nav-title">Sentinel Control</span>
+            <span class="nav-desc">Cyber Resilience</span>
+          </div>
+          <span class="threat-dot" *ngIf="hasActiveThreat"></span>
+        </a>
+      </nav>
+
+      <!-- Sidebar Status Card -->
+      <div class="sidebar-card glass-panel">
+        <h4 class="card-title">GCC System Trust</h4>
+        <div class="gauge-container">
+          <div class="gauge-bar">
+            <div class="gauge-fill" [style.width.%]="hasActiveThreat ? 45 : 98" [class.danger]="hasActiveThreat"></div>
+          </div>
+          <div class="gauge-labels">
+            <span>Score</span>
+            <span class="gauge-val">{{ hasActiveThreat ? '45%' : '98%' }}</span>
+          </div>
+        </div>
+        <div class="stats-mini">
+          <div class="stat-mini-item">
+            <span class="stat-mini-label">Completed Tasks</span>
+            <span class="stat-mini-val">{{ activeTally.completed }}</span>
+          </div>
+          <div class="stat-mini-item">
+            <span class="stat-mini-label">Active Agents</span>
+            <span class="stat-mini-val">4 / 4</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="content-viewport">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

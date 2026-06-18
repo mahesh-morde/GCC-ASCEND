@@ -1,0 +1,262 @@
+<div class="awos-container">
+  <!-- Interactive Kanban Workspace Header -->
+  <div class="awos-header-row glass-panel">
+    <div class="header-main-title">
+      <h3>Augmented Workforce Kanban</h3>
+      <p class="section-desc">Manage decentralized swarm task pipelines, HITL security checkpoints, and ledger commitments.</p>
+    </div>
+    
+    <!-- Micro Swarm Status Pill -->
+    <div class="swarm-overview-pill">
+      <div class="pill-item text-secondary">
+        <span class="status-indicator" style="background-color: var(--text-secondary); box-shadow: none;"></span>
+        <span>Queued: <strong>{{ stats.queued }}</strong></span>
+      </div>
+      <span class="pill-sep"></span>
+      <div class="pill-item text-info">
+        <span class="status-indicator status-active"></span>
+        <span>Active: <strong>{{ stats.progress }}</strong></span>
+      </div>
+      <span class="pill-sep"></span>
+      <div class="pill-item text-warning" [class.pulse-glow]="stats.approval > 0">
+        <span class="status-indicator status-warning" [class.alert-glow]="stats.approval > 0"></span>
+        <span>Awaiting HITL: <strong>{{ stats.approval }}</strong></span>
+      </div>
+      <span class="pill-sep"></span>
+      <div class="pill-item text-success">
+        <span class="status-indicator status-active" style="background-color: var(--status-success); box-shadow: 0 0 8px var(--status-success);"></span>
+        <span>Completed: <strong>{{ stats.completed }}</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Primary Workspace -->
+  <div class="awos-workspace">
+    <!-- Kanban Board -->
+    <div class="kanban-section glass-panel">
+      <div class="kanban-grid">
+        <!-- Queued -->
+        <div class="kanban-col">
+          <div class="col-header">
+            <span class="dot queued-dot"></span>
+            <h4>Queued</h4>
+            <span class="count">{{ stats.queued }}</span>
+          </div>
+          <div class="col-body">
+            <div *ngFor="let t of tasks" [class.hidden]="t.status !== 'queued'">
+              <div class="task-card glass-panel" (click)="selectTask(t.id)" [class.selected]="selectedTaskId === t.id">
+                <div class="card-top">
+                  <span class="task-id">#{{ t.id.substring(5) }}</span>
+                  <span class="badge" [class.badge-low]="t.risk === 'low'" [class.badge-medium]="t.risk === 'medium'" [class.badge-high]="t.risk === 'high'">{{ t.risk }}</span>
+                </div>
+                <h5 class="task-title">{{ t.title }}</h5>
+                <div class="card-bot">
+                  <div class="agent-info">
+                    <span class="status-indicator status-active"></span>
+                    <span class="agent-name">{{ getAgentName(t.assignedAgent) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="empty-placeholder" *ngIf="stats.queued === 0">No queued tasks</div>
+          </div>
+        </div>
+
+        <!-- In Progress -->
+        <div class="kanban-col">
+          <div class="col-header">
+            <span class="dot progress-dot"></span>
+            <h4>In Progress</h4>
+            <span class="count">{{ stats.progress }}</span>
+          </div>
+          <div class="col-body">
+            <div *ngFor="let t of tasks" [class.hidden]="t.status !== 'in-progress'">
+              <div class="task-card glass-panel" (click)="selectTask(t.id)" [class.selected]="selectedTaskId === t.id" [class.quarantined]="isAgentQuarantined(t.assignedAgent)">
+                <div class="card-top">
+                  <span class="task-id">#{{ t.id.substring(5) }}</span>
+                  <span class="badge" [class.badge-low]="t.risk === 'low'" [class.badge-medium]="t.risk === 'medium'" [class.badge-high]="t.risk === 'high'">{{ t.risk }}</span>
+                </div>
+                <h5 class="task-title">{{ t.title }}</h5>
+                <div class="card-bot">
+                  <div class="agent-info">
+                    <span class="status-indicator" [class.status-warning]="isAgentQuarantined(t.assignedAgent)" [class.status-active]="!isAgentQuarantined(t.assignedAgent) && getAgentStatus(t.assignedAgent) === 'busy'"></span>
+                    <span class="agent-name">{{ getAgentName(t.assignedAgent) }}</span>
+                  </div>
+                  <span class="quarantine-badge" *ngIf="isAgentQuarantined(t.assignedAgent)">MUTED</span>
+                </div>
+              </div>
+            </div>
+            <div class="empty-placeholder" *ngIf="stats.progress === 0">No tasks running</div>
+          </div>
+        </div>
+
+        <!-- Awaiting Approval (HITL) -->
+        <div class="kanban-col">
+          <div class="col-header">
+            <span class="dot approval-dot"></span>
+            <h4>Awaiting HITL</h4>
+            <span class="count">{{ stats.approval }}</span>
+          </div>
+          <div class="col-body">
+            <div *ngFor="let t of tasks" [class.hidden]="t.status !== 'awaiting-approval'">
+              <div class="task-card glass-panel hitl-card" (click)="selectTask(t.id)" [class.selected]="selectedTaskId === t.id">
+                <div class="card-top">
+                  <span class="task-id">#{{ t.id.substring(5) }}</span>
+                  <span class="badge badge-high">{{ t.risk }}</span>
+                </div>
+                <h5 class="task-title">{{ t.title }}</h5>
+                <div class="card-bot flex-col">
+                  <div class="agent-info">
+                    <span class="status-indicator status-warning"></span>
+                    <span class="agent-name">{{ getAgentName(t.assignedAgent) }}</span>
+                  </div>
+                  <div class="hitl-actions">
+                    <button class="hitl-btn approve" (click)="approveTask(t.id, $event)">APPROVE</button>
+                    <button class="hitl-btn reject" (click)="rejectTask(t.id, $event)">REJECT</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="empty-placeholder" *ngIf="stats.approval === 0">No approvals pending</div>
+          </div>
+        </div>
+
+        <!-- Completed -->
+        <div class="kanban-col">
+          <div class="col-header">
+            <span class="dot completed-dot"></span>
+            <h4>Completed</h4>
+            <span class="count">{{ stats.completed }}</span>
+          </div>
+          <div class="col-body">
+            <div *ngFor="let t of tasks" [class.hidden]="t.status !== 'completed'">
+              <div class="task-card glass-panel completed-card" (click)="selectTask(t.id)" [class.selected]="selectedTaskId === t.id">
+                <div class="card-top">
+                  <span class="task-id">#{{ t.id.substring(5) }}</span>
+                  <span class="badge" [class.badge-low]="t.risk === 'low'" [class.badge-medium]="t.risk === 'medium'" [class.badge-high]="t.risk === 'high'">{{ t.risk }}</span>
+                </div>
+                <h5 class="task-title">{{ t.title }}</h5>
+                <div class="card-bot">
+                  <div class="agent-info">
+                    <span class="status-indicator status-active"></span>
+                    <span class="agent-name">{{ getAgentName(t.assignedAgent) }}</span>
+                  </div>
+                  <svg class="check-icon" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" /></svg>
+                </div>
+              </div>
+            </div>
+            <div class="empty-placeholder" *ngIf="stats.completed === 0">No completed tasks</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Operations Control Deck -->
+    <div class="operations-panel">
+      <!-- Deck Tab Bar -->
+      <div class="deck-tabs glass-panel">
+        <button class="deck-tab-btn" [class.active]="activeDeckTab === 'telemetry'" (click)="activeDeckTab = 'telemetry'">
+          <svg viewBox="0 0 24 24" class="tab-icon"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          <span>Telemetry</span>
+        </button>
+        <button class="deck-tab-btn" [class.active]="activeDeckTab === 'dispatch'" (click)="activeDeckTab = 'dispatch'">
+          <svg viewBox="0 0 24 24" class="tab-icon"><path d="M12 4v16m8-8H4"/></svg>
+          <span>Dispatch</span>
+        </button>
+        <button class="deck-tab-btn" [class.active]="activeDeckTab === 'console'" (click)="activeDeckTab = 'console'">
+          <svg viewBox="0 0 24 24" class="tab-icon"><path d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          <span>Logs Console</span>
+        </button>
+      </div>
+
+      <!-- Tab Content Area -->
+      <div class="deck-content-wrapper">
+        <!-- 1. Interactive Agent Nodes Telemetry -->
+        <div class="glass-panel telemetry-card" *ngIf="activeDeckTab === 'telemetry'">
+          <h4 class="panel-subtitle">GCC Swarm Nodes Telemetry</h4>
+          <p class="deck-sub-desc">Ping live agents to inspect connectivity, latency, and consensus availability status.</p>
+          
+          <div class="telemetry-list">
+            <div class="telemetry-row" *ngFor="let a of agents" [class.muted-node]="isAgentQuarantined(a.id)">
+              <div class="telemetry-info">
+                <span class="status-indicator" [class.status-active]="a.status !== 'offline'" [class.status-danger]="a.status === 'offline'"></span>
+                <div class="telemetry-details">
+                  <span class="node-name">{{ a.name.split(' (')[0] }}</span>
+                  <span class="node-status">{{ a.status?.toUpperCase() }}</span>
+                </div>
+              </div>
+              <div class="telemetry-actions">
+                <span class="ping-result" *ngIf="pingTimes[a.id]" [class.ping-error]="isAgentQuarantined(a.id)" [class.loading]="pingTimes[a.id].pinging">
+                  {{ pingTimes[a.id].pinging ? (pingTimes[a.id].value === 'BLOCKED' ? 'SYNC...' : 'PINGING...') : pingTimes[a.id].value }}
+                </span>
+                <button class="ping-btn" (click)="pingAgent(a.id)" [disabled]="pingTimes[a.id] ? pingTimes[a.id].pinging : false">PING</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Create Swarm Operation Form -->
+        <div class="glass-panel form-card" *ngIf="activeDeckTab === 'dispatch'">
+          <h4 class="panel-subtitle">Create Swarm Operation</h4>
+          <p class="deck-sub-desc">Manually inject tasks and trigger autonomous governance consensus ledger verification.</p>
+          
+          <form (submit)="createTask()" class="task-form">
+            <div class="form-group">
+              <label for="taskTitle">Task Name / Context</label>
+              <input type="text" id="taskTitle" name="title" [(ngModel)]="newTaskTitle" placeholder="e.g. Disburse relocation expenses..." required class="form-input" />
+            </div>
+
+            <div class="form-row">
+              <div class="form-group half">
+                <label for="taskRisk">Risk Audit Tier</label>
+                <select id="taskRisk" name="risk" [(ngModel)]="newTaskRisk" class="form-select">
+                  <option value="low">Low Risk</option>
+                  <option value="medium">Medium Risk</option>
+                  <option value="high">High Risk (HITL)</option>
+                </select>
+              </div>
+
+              <div class="form-group half">
+                <label for="taskAgent">Target Agent Swarm</label>
+                <select id="taskAgent" name="agent" [(ngModel)]="newTaskAgent" class="form-select">
+                  <option *ngFor="let a of agents" [value]="a.id">{{ a.name.split(' (')[0] }}</option>
+                </select>
+              </div>
+            </div>
+
+            <button type="submit" class="glow-btn submit-btn">DISPATCH OPERATION</button>
+          </form>
+        </div>
+
+        <!-- 3. Task Console Logs Terminal -->
+        <div class="glass-panel logs-card" *ngIf="activeDeckTab === 'console'">
+          <div class="logs-header">
+            <h4 class="panel-subtitle">Orchestrator Execution Logs</h4>
+            <span class="active-task-pill" *ngIf="selectedTaskId">Task: #{{ selectedTaskId.substring(5) }}</span>
+          </div>
+          
+          <div class="logs-viewport" *ngIf="selectedTaskId">
+            <div class="logs-details">
+              <div class="detail-header">
+                <h5>{{ getSelectedTask()?.title }}</h5>
+                <span class="badge" [class.badge-low]="getSelectedTask()?.risk === 'low'" [class.badge-medium]="getSelectedTask()?.risk === 'medium'" [class.badge-high]="getSelectedTask()?.risk === 'high'">
+                  {{ getSelectedTask()?.risk }} Risk
+                </span>
+              </div>
+              <div class="logs-scroller">
+                <div class="log-entry" *ngFor="let log of getLogsForSelected(); let last = last" [class.latest-log]="last" [class.blocked-log]="log.includes('[BLOCKED]')">
+                  <span class="log-bullet"></span>
+                  <span class="log-text">{{ log }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="no-task-selected" *ngIf="!selectedTaskId">
+            <p>Select a task card on the Kanban board to inspect live cryptographic execution logs.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
