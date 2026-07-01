@@ -1,1632 +1,1161 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AscendOS Presentation - Protocol of Handshakes</title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      --font-mono: 'JetBrains Mono', monospace;
-      --bg-app: #030612;
-      --bg-gradient: radial-gradient(circle at 50% 30%, #0c122e 0%, #030612 100%);
-      --panel-bg: rgba(10, 16, 38, 0.7);
-      --panel-border: rgba(0, 242, 254, 0.18);
-      --text-primary: #f3f4f6;
-      --text-secondary: #9ca3af;
-      --text-muted: #6b7280;
-      --accent-primary: #00f2fe;
-      --accent-secondary: #7f00ff;
-      --accent-gradient: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
-      --accent-glow: 0 0 15px rgba(0, 242, 254, 0.35);
-      --status-success: #10b981;
-      --status-warning: #f59e0b;
-      --status-danger: #ef4444;
-      --status-info: #3b82f6;
-    }
-
-    .svg-text {
-      fill: #ffffff;
-    }
-    .text-purple {
-      fill: #a855f7;
-    }
-    .text-blue {
-      fill: #3b82f6;
-    }
-    .text-accent {
-      fill: #00f2fe;
-    }
-
-    body[data-theme="light"] {
-      --bg-app: #f8fafc;
-      --bg-gradient: radial-gradient(circle at 50% 30%, #e0e7ff 0%, #f8fafc 100%);
-      --panel-bg: rgba(255, 255, 255, 0.78);
-      --panel-border: rgba(99, 102, 241, 0.2);
-      --text-primary: #0f172a;
-      --text-secondary: #475569;
-      --text-muted: #64748b;
-      --accent-primary: #6366f1;
-      --accent-secondary: #4f46e5;
-      --accent-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-      --accent-glow: 0 0 15px rgba(99, 102, 241, 0.2);
-    }
-
-    body[data-theme="light"] .glass-panel {
-      box-shadow: 0 12px 40px rgba(99, 102, 241, 0.06);
-    }
-    body[data-theme="light"] .net-art-svg line {
-      stroke: rgba(99, 102, 241, 0.25);
-    }
-    body[data-theme="light"] .svg-text {
-      fill: #0f172a;
-    }
-    body[data-theme="light"] .text-purple {
-      fill: #7e22ce;
-    }
-    body[data-theme="light"] .text-blue {
-      fill: #1d4ed8;
-    }
-    body[data-theme="light"] .text-accent {
-      fill: var(--accent-secondary);
-    }
-    body[data-theme="light"] .step-log-mock {
-      background: #f1f5f9;
-      border-color: rgba(99, 102, 241, 0.12);
-      color: #334155;
-    }
-    body[data-theme="light"] .mockup-kanban {
-      background: rgba(255, 255, 255, 0.35);
-      border-color: rgba(99, 102, 241, 0.1);
-    }
-    body[data-theme="light"] .mockup-col {
-      background: rgba(99, 102, 241, 0.03);
-      border-color: rgba(99, 102, 241, 0.08);
-    }
-    body[data-theme="light"] .mockup-task-card {
-      background: #ffffff;
-      border-color: rgba(99, 102, 241, 0.18);
-    }
-    body[data-theme="light"] .mockup-card-content {
-      background: rgba(255, 255, 255, 0.35);
-      border-color: rgba(99, 102, 241, 0.1);
-    }
-    body[data-theme="light"] .dot-nav {
-      background: rgba(0, 0, 0, 0.15);
-    }
-    body[data-theme="light"] footer {
-      background: rgba(255, 255, 255, 0.5);
-      border-top-color: rgba(99, 102, 241, 0.08);
-    }
-    body[data-theme="light"] .header-info-badge {
-      background: rgba(99, 102, 241, 0.05);
-    }
-    body[data-theme="light"] .theme-btn-toggle {
-      background: rgba(99, 102, 241, 0.05) !important;
-    }
-    body[data-theme="light"] .nav-btn {
-      background: rgba(99, 102, 241, 0.05);
-    }
-    body[data-theme="light"] .nav-btn:hover {
-      background: rgba(99, 102, 241, 0.1);
-    }
-
-    body[data-theme="light"] .title-container h1,
-    body[data-theme="light"] .summary-heading {
-      background: linear-gradient(90deg, var(--text-primary) 0%, var(--accent-primary) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: var(--font-sans);
-      background: var(--bg-app);
-      background-image: var(--bg-gradient);
-      color: var(--text-primary);
-      min-height: 100vh;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-
-    /* ───────────────────────────────────────────
-       Touch / Swipe support on mobile
-    ─────────────────────────────────────────── */
-    .slide-viewport { touch-action: pan-y; }
-
-    /* Presentation Header */
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 24px 40px;
-      z-index: 10;
-    }
-
-    .logo-area {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .logo-box {
-      width: 38px;
-      height: 38px;
-      background: linear-gradient(135deg, rgba(0, 242, 254, 0.1) 0%, rgba(127, 0, 255, 0.1) 100%);
-      border: 1px solid var(--panel-border);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 6px;
-    }
-
-    .logo-svg {
-      width: 100%;
-      height: 100%;
-    }
-
-    .title-container h1 {
-      font-size: 1.25rem;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      background: linear-gradient(90deg, #fff 0%, var(--accent-primary) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .subtitle {
-      font-size: 0.68rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-secondary);
-    }
-
-    .header-info-badge {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--panel-border);
-      border-radius: 20px;
-      padding: 6px 14px;
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      font-weight: 500;
-      color: var(--accent-primary);
-    }
-
-    /* Slide Frame Container */
-    .slide-viewport {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0 40px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .slide {
-      width: 100%;
-      max-width: 1200px;
-      height: 100%;
-      max-height: 620px;
-      position: absolute;
-      opacity: 0;
-      transform: translateY(30px) scale(0.98);
-      pointer-events: none;
-      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-
-    .slide.active {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-      pointer-events: auto;
-    }
-
-    /* Common Slide Elements */
-    .slide-header {
-      margin-bottom: 32px;
-    }
-
-    .slide-tag {
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.15em;
-      color: var(--accent-primary);
-      display: block;
-      margin-bottom: 8px;
-    }
-
-    .slide-title {
-      font-size: 2.2rem;
-      font-weight: 800;
-      letter-spacing: -0.01em;
-      line-height: 1.15;
-    }
-
-    .glass-panel {
-      background: var(--panel-bg);
-      border: 1px solid var(--panel-border);
-      border-radius: 16px;
-      padding: 32px;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
-    }
-
-    /* SLIDE 1: Title Slide */
-    .hero-container {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 40px;
-    }
-
-    .hero-content {
-      flex: 1;
-      max-width: 650px;
-    }
-
-    .hero-tagline {
-      font-size: 3.2rem;
-      font-weight: 800;
-      line-height: 1.05;
-      letter-spacing: -0.02em;
-      margin-bottom: 24px;
-    }
-
-    .hero-tagline span {
-      background: linear-gradient(90deg, var(--accent-primary) 0%, #a855f7 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .hero-desc {
-      font-size: 1.05rem;
-      color: var(--text-secondary);
-      line-height: 1.5;
-      margin-bottom: 32px;
-    }
-
-    .hero-art {
-      width: 420px;
-      height: 420px;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    /* Floating node animation */
-    .net-art-svg {
-      width: 100%;
-      height: 100%;
-    }
-
-    /* SLIDE 2: The Problem */
-    .problem-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 24px;
-    }
-
-    .problem-card {
-      transition: all 0.3s ease;
-    }
-
-    .problem-card:hover {
-      border-color: rgba(239, 68, 68, 0.4);
-      transform: translateY(-4px);
-    }
-
-    .card-icon-area {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 20px;
-      font-size: 1.3rem;
-    }
-
-    .bg-red-soft { background: rgba(239, 68, 68, 0.12); color: var(--status-danger); }
-    .bg-warn-soft { background: rgba(245, 158, 11, 0.12); color: var(--status-warning); }
-    .bg-purple-soft { background: rgba(168, 85, 247, 0.12); color: #c084fc; }
-
-    .card-title-sub {
-      font-size: 1.15rem;
-      font-weight: 700;
-      margin-bottom: 12px;
-      color: var(--text-primary);
-    }
-
-    .card-para {
-      font-size: 0.84rem;
-      color: var(--text-secondary);
-      line-height: 1.5;
-    }
-
-    .problem-quote {
-      margin-top: 32px;
-      border-left: 3px solid var(--status-danger);
-      padding-left: 20px;
-      font-style: italic;
-      color: var(--text-secondary);
-      font-size: 0.95rem;
-    }
-
-    /* SLIDE 3: The Handshake Protocol Flow */
-    .flow-split {
-      display: grid;
-      grid-template-columns: 1fr 1.2fr;
-      gap: 40px;
-      align-items: center;
-    }
-
-    .flow-diagram-container {
-      background: var(--panel-bg);
-      border: 1px dashed var(--panel-border);
-      border-radius: 12px;
-      padding: 20px;
-      height: 380px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-    }
-
-    .bullet-list {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .bullet-item {
-      display: flex;
-      gap: 14px;
-    }
-
-    .bullet-number {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: var(--accent-gradient);
-      color: #000;
-      font-family: var(--font-mono);
-      font-weight: 700;
-      font-size: 0.75rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .bullet-text h5 {
-      font-size: 0.95rem;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-
-    .bullet-text p {
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-      line-height: 1.4;
-    }
-
-    /* SLIDE 4: Technical Pillars */
-    .pillars-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 24px;
-    }
-
-    .pillar-card {
-      background: var(--panel-bg);
-      transition: all 0.3s ease;
-    }
-
-    .pillar-card:hover {
-      border-color: var(--accent-primary);
-      transform: translateY(-4px);
-    }
-
-    .pillar-icon-box {
-      width: 42px;
-      height: 42px;
-      border-radius: 8px;
-      background: rgba(0, 242, 254, 0.1);
-      border: 1px solid rgba(0, 242, 254, 0.2);
-      color: var(--accent-primary);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 20px;
-      font-size: 1.2rem;
-    }
-
-    .pillar-title {
-      font-size: 1.2rem;
-      font-weight: 700;
-      margin-bottom: 12px;
-    }
-
-    .pillar-bullets {
-      list-style-type: none;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .pillar-bullets li {
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-      position: relative;
-      padding-left: 14px;
-      line-height: 1.4;
-    }
-
-    .pillar-bullets li::before {
-      content: '⚡';
-      position: absolute;
-      left: 0;
-      top: 1px;
-      font-size: 0.65rem;
-      color: var(--accent-primary);
-    }
-
-    /* SLIDE 5: Rogue Agent and Revocation */
-    .dual-pane-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 32px;
-    }
-
-    .pane-card {
-      padding: 24px;
-      background: var(--panel-bg);
-      border: 1px solid var(--panel-border);
-      border-radius: 12px;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-    }
-
-    .pane-card.danger-edge:hover {
-      border-color: rgba(239, 68, 68, 0.4);
-    }
-
-    .pane-card.info-edge:hover {
-      border-color: rgba(59, 130, 246, 0.4);
-    }
-
-    .pane-title {
-      font-size: 1.2rem;
-      font-weight: 700;
-      margin-bottom: 14px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .pane-desc {
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-      line-height: 1.5;
-      margin-bottom: 20px;
-    }
-
-    .step-log-mock {
-      background: #02040b;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      border-radius: 8px;
-      padding: 14px;
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      color: var(--text-secondary);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .log-line {
-      display: flex;
-      gap: 8px;
-    }
-
-    .log-bullet {
-      color: var(--status-success);
-    }
-
-    .log-bullet.blocked {
-      color: var(--status-danger);
-    }
-
-    .log-text.highlight-red {
-      color: #ef4444;
-      font-weight: 600;
-    }
-
-    /* SLIDE 6: Dashboard Mockup Preview */
-    .mockup-workspace {
-      display: grid;
-      grid-template-columns: 1fr 280px;
-      gap: 20px;
-      height: 380px;
-    }
-
-    .mockup-kanban {
-      background: rgba(0, 0, 0, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.04);
-      border-radius: 10px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .mockup-header-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 14px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      padding-bottom: 8px;
-    }
-
-    .mockup-header-row h4 {
-      font-size: 0.88rem;
-      color: var(--text-primary);
-    }
-
-    .mockup-kanban-cols {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      flex: 1;
-    }
-
-    .mockup-col {
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.03);
-      border-radius: 6px;
-      padding: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .mockup-col-title {
-      font-size: 0.65rem;
-      text-transform: uppercase;
-      color: var(--text-secondary);
-      font-weight: 700;
-      margin-bottom: 4px;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .mockup-task-card {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(0, 242, 254, 0.15);
-      border-radius: 6px;
-      padding: 8px;
-      font-size: 0.68rem;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      position: relative;
-    }
-
-    .mockup-task-card.hitl {
-      border-color: rgba(245, 158, 11, 0.3);
-      background: rgba(245, 158, 11, 0.02);
-    }
-
-    .mockup-task-card h6 {
-      font-size: 0.7rem;
-      margin-bottom: 4px;
-    }
-
-    .mockup-task-meta {
-      display: flex;
-      justify-content: space-between;
-      color: var(--text-muted);
-      font-size: 0.58rem;
-    }
-
-    .mockup-deck-pane {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .mockup-tabs {
-      display: flex;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.05);
-      border-radius: 6px;
-      padding: 2px;
-      gap: 2px;
-    }
-
-    .mockup-tab-btn {
-      flex: 1;
-      font-size: 0.62rem;
-      font-weight: 700;
-      color: var(--text-secondary);
-      background: transparent;
-      border: none;
-      padding: 6px 2px;
-      border-radius: 4px;
-      text-align: center;
-    }
-
-    .mockup-tab-btn.active {
-      background: rgba(0, 242, 254, 0.1);
-      color: var(--accent-primary);
-      border: 1px solid rgba(0, 242, 254, 0.2);
-    }
-
-    .mockup-card-content {
-      background: rgba(0,0,0,0.2);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      border-radius: 8px;
-      padding: 12px;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-
-    .mockup-telemetry-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.65rem;
-      padding: 6px 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-    }
-
-    .mockup-telemetry-item:last-child {
-      border: none;
-    }
-
-    .mockup-telemetry-name {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .mockup-dot {
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      background: var(--status-success);
-    }
-
-    .mockup-dot.danger {
-      background: var(--status-danger);
-    }
-
-    /* SLIDE 7: Summary */
-    .summary-box {
-      max-width: 800px;
-      margin: 0 auto;
-      text-align: center;
-    }
-
-    .summary-heading {
-      font-size: 1.8rem;
-      font-weight: 800;
-      margin-bottom: 20px;
-      background: linear-gradient(90deg, #fff 0%, var(--accent-primary) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .summary-desc {
-      font-size: 1rem;
-      color: var(--text-secondary);
-      line-height: 1.6;
-      margin-bottom: 32px;
-    }
-
-    .summary-points-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-      text-align: left;
-    }
-
-    .summary-point-card {
-      background: var(--panel-bg);
-      border: 1px solid var(--panel-border);
-      border-radius: 10px;
-      padding: 16px 20px;
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-    }
-
-    .point-icon {
-      color: var(--accent-primary);
-      font-size: 1.1rem;
-    }
-
-    .point-title {
-      font-weight: 600;
-      font-size: 0.88rem;
-      color: var(--text-primary);
-      margin-bottom: 4px;
-    }
-
-    .point-desc {
-      font-size: 0.78rem;
-      color: var(--text-secondary);
-      line-height: 1.4;
-    }
-
-    /* Footer & Navigation Controls */
-    footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 24px 40px;
-      z-index: 10;
-      border-top: 1px solid rgba(255, 255, 255, 0.04);
-      background: rgba(2, 4, 10, 0.4);
-    }
-
-    .slide-progress-dots {
-      display: flex;
-      gap: 12px;
-    }
-
-    .dot-nav {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.15);
-      cursor: pointer;
-      transition: all 0.3s ease;
-      border: none;
-    }
-
-    .dot-nav:hover {
-      background: rgba(255, 255, 255, 0.3);
-    }
-
-    .dot-nav.active {
-      background: var(--accent-primary);
-      box-shadow: var(--accent-glow);
-      transform: scale(1.2);
-    }
-
-    .nav-buttons {
-      display: flex;
-      gap: 16px;
-    }
-
-    .nav-btn {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--panel-border);
-      color: var(--text-primary);
-      padding: 8px 20px;
-      border-radius: 8px;
-      font-size: 0.82rem;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: var(--font-sans);
-      transition: all 0.2s ease;
-    }
-
-    .nav-btn:hover {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: var(--accent-primary);
-      box-shadow: 0 0 10px rgba(0, 242, 254, 0.1);
-    }
-
-    .nav-btn.prev {
-      opacity: 0.5;
-    }
-
-    .nav-btn.prev.visible {
-      opacity: 1;
-    }
-
-    .nav-btn.accent-btn {
-      background: var(--accent-gradient);
-      color: #000;
-      border: none;
-      box-shadow: var(--accent-glow);
-    }
-
-    .nav-btn.accent-btn:hover {
-      filter: brightness(1.1);
-      box-shadow: 0 0 20px rgba(0, 242, 254, 0.5);
-    }
-
-    /* Resource Links Section styles */
-    .resources-links-container {
-      margin-top: 32px;
-      padding-top: 24px;
-      border-top: 1px solid var(--panel-border);
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-
-    .resource-link {
-      color: var(--text-primary);
-      text-decoration: none;
-      font-size: 0.8rem;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 16px;
-      background: var(--panel-bg);
-      border: 1px solid var(--panel-border);
-      border-radius: 24px;
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-
-    .resource-link:hover {
-      border-color: var(--accent-primary);
-      box-shadow: var(--accent-glow);
-      transform: translateY(-2px);
-      color: var(--accent-primary);
-    }
-
-    .resource-link span {
-      font-size: 1rem;
-    }
-
-    body[data-theme="light"] .resource-link {
-      background: rgba(99, 102, 241, 0.05);
-      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.04);
-    }
-
-    body[data-theme="light"] .resource-link:hover {
-      background: rgba(99, 102, 241, 0.1);
-    }
-
-    /* ═══════════════════════════════════════════ */
-
-
-    /* ═══════════════════════════════════════════
-       RESPONSIVE — Tablet  (≤ 900px)
-    ═══════════════════════════════════════════ */
-    @media (max-width: 900px) {
-      header {
-        padding: 16px 24px;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
-
-      .header-info-badge { display: none; }
-
-      .slide-viewport { padding: 0 20px; }
-
-      .slide {
-        max-height: none;
-        position: relative;
-        opacity: 1;
-        transform: none;
-        pointer-events: auto;
-        display: none;
-        padding: 8px 0 16px;
-      }
-
-      .slide.active { display: flex; }
-
-      /* Typography */
-      .hero-tagline    { font-size: 2.2rem; }
-      .slide-title     { font-size: 1.6rem; }
-      .summary-heading { font-size: 1.4rem; }
-
-      /* Slide 1 */
-      .hero-art { width: 260px; height: 260px; }
-
-      /* Slide 2 */
-      .problem-grid { grid-template-columns: 1fr; gap: 16px; }
-
-      /* Slide 3 */
-      .flow-split {
-        grid-template-columns: 1fr;
-        gap: 24px;
-      }
-      .flow-diagram-container { height: 280px; }
-
-      /* Slide 4 */
-      .pillars-grid { grid-template-columns: 1fr; gap: 16px; }
-
-      /* Slide 5 */
-      .dual-pane-grid { grid-template-columns: 1fr; gap: 20px; }
-
-      /* Slide 6 */
-      .mockup-workspace {
-        grid-template-columns: 1fr;
-        height: auto;
-      }
-      .mockup-kanban-cols { grid-template-columns: repeat(2, 1fr); }
-
-      /* Slide 7 */
-      .summary-points-grid { grid-template-columns: 1fr; }
-
-      footer {
-        padding: 14px 24px;
-        flex-wrap: wrap;
-        gap: 12px;
-        justify-content: center;
-      }
-
-      .glass-panel { padding: 20px; }
-      .pane-card   { padding: 16px; }
-    }
-
-    /* ═══════════════════════════════════════════
-       RESPONSIVE — Mobile  (≤ 540px)
-    ═══════════════════════════════════════════ */
-    @media (max-width: 540px) {
-      body { overflow-y: auto; }
-
-      header { padding: 12px 16px; }
-
-      .subtitle { display: none; }
-
-      .slide-viewport {
-        padding: 0 12px;
-        align-items: flex-start;
-        overflow-y: auto;
-      }
-
-      .slide {
-        position: relative;
-        max-height: none;
-        height: auto;
-        padding-bottom: 24px;
-      }
-
-      /* Typography */
-      .hero-tagline    { font-size: 1.6rem; }
-      .slide-title     { font-size: 1.3rem; margin-bottom: 20px; }
-      .hero-desc       { font-size: 0.9rem; }
-      .summary-heading { font-size: 1.2rem; }
-      .summary-desc    { font-size: 0.85rem; }
-
-      .slide-header    { margin-bottom: 18px; }
-
-      /* Slide 1 — hide decorative art on phones */
-      .hero-art        { display: none; }
-      .hero-container  { justify-content: flex-start; }
-
-      /* Slide 2 */
-      .problem-quote   { font-size: 0.8rem; margin-top: 16px; }
-
-      /* Slide 3 — stack SVG diagram + bullets */
-      .flow-split      { gap: 16px; }
-      .flow-diagram-container { height: 220px; padding: 10px; }
-      .bullet-list     { gap: 10px; }
-      .bullet-text h5  { font-size: 0.85rem; }
-      .bullet-text p   { font-size: 0.75rem; }
-
-      /* Slide 4 */
-      .pillars-grid    { gap: 12px; }
-      .pillar-title    { font-size: 1rem; }
-
-      /* Slide 5 */
-      .pane-title      { font-size: 1rem; }
-      .dual-pane-grid  { gap: 14px; }
-
-      /* Slide 6 */
-      .mockup-kanban-cols { grid-template-columns: repeat(2, 1fr); gap: 6px; }
-      .mockup-deck-pane   { display: none; }  /* simplify on phones */
-
-      /* Slide 7 */
-      .summary-points-grid { gap: 10px; }
-      .summary-point-card  { padding: 12px 14px; }
-
-      /* Footer */
-      footer {
-        padding: 10px 16px;
-        flex-direction: column;
-        gap: 10px;
-      }
-      .slide-progress-dots { gap: 8px; }
-      .dot-nav { width: 8px; height: 8px; }
-      .nav-buttons { gap: 8px; }
-      .nav-btn { padding: 7px 14px; font-size: 0.76rem; }
-
-      /* Glass panels */
-      .glass-panel { padding: 16px; border-radius: 12px; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ascendo-OS | Agentic Governance Operating System</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDBmMmZlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBvbHlnb24gcG9pbnRzPSIxMiAyIDIyIDIyIDIgMjIiLz48L3N2Zz4=" type="image/svg+xml">
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- AOS CSS for Animations -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    . <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        :root {
+            /* Light Theme */
+            --bg-primary: #f4f6fc;
+            --bg-lighter: #ffffff;
+            --bg-surface: #e9ecf8;
+            --primary-color: #6366f1; /* Deep Indigo */
+            --primary-light: #818cf8;
+            --accent-color: #00d2fe; /* Cyber Cyan */
+            --accent-light: #67e8f9;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --text-primary: #0b0f19;
+            --text-secondary: #475569;
+            --glass-bg: rgba(255, 255, 255, 0.75);
+            --glass-border: rgba(99, 102, 241, 0.15);
+            --glass-hover: rgba(255, 255, 255, 0.9);
+            --nav-bg: rgba(244, 246, 252, 0.85);
+            
+            --gradient-primary: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #00d2fe 100%);
+            --gradient-hero: radial-gradient(circle, rgba(99, 102, 241, 0.18) 0%, rgba(244, 246, 252, 0) 70%);
+            --gradient-hero-2: radial-gradient(circle, rgba(0, 210, 254, 0.15) 0%, rgba(244, 246, 252, 0) 70%);
+            
+            --font-sans: 'Inter', sans-serif;
+            --font-display: 'Outfit', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        [data-theme="dark"] {
+            /* Dark Theme - Dark Graphite + Cyan Accents */
+            --bg-primary: #03050d;
+            --bg-lighter: #070a18;
+            --bg-surface: #0c102b;
+            --primary-color: #00f2fe; /* Electric Cyan */
+            --primary-light: #67e8f9;
+            --accent-color: #a855f7; /* Purple */
+            --accent-light: #c084fc;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --glass-bg: rgba(7, 10, 24, 0.65);
+            --glass-border: rgba(0, 242, 254, 0.15);
+            --glass-hover: rgba(7, 10, 24, 0.85);
+            --nav-bg: rgba(3, 5, 13, 0.85);
+            
+            --gradient-primary: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            --gradient-hero: radial-gradient(circle, rgba(0, 242, 254, 0.12) 0%, rgba(0,0,0,0) 60%);
+            --gradient-hero-2: radial-gradient(circle, rgba(168, 85, 247, 0.08) 0%, rgba(0,0,0,0) 60%);
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            overflow-x: hidden;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        h1, h2, h3, h4, h5, h6, .display-font {
+            font-family: var(--font-display);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        /* Typography Utilities */
+        .text-gradient {
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .text-gradient-primary {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .text-secondary { color: var(--text-secondary) !important; }
+        .text-accent { color: var(--accent-color) !important; }
+        .text-primary-brand { color: var(--primary-color) !important; }
+        .text-success { color: var(--success-color) !important; }
+        .text-warning { color: var(--warning-color) !important; }
+        .text-error { color: var(--error-color) !important; }
+
+        .letter-spacing-wide { letter-spacing: 2px; }
+
+        /* Glassmorphism */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card:hover {
+            background: var(--glass-hover);
+            transform: translateY(-5px);
+            border-color: var(--primary-color);
+            box-shadow: 0 15px 40px -10px rgba(0, 242, 254, 0.15);
+        }
+
+        /* Navigation */
+        .navbar {
+            background: var(--nav-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 1.2rem 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .navbar-brand {
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 1.5rem;
+            letter-spacing: -0.03em;
+            color: var(--text-primary) !important;
+        }
+
+        .nav-link {
+            color: var(--text-secondary) !important;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary) !important;
+        }
+
+        /* Buttons */
+        .btn-premium {
+            background: var(--gradient-primary);
+            color: black !important;
+            border: none;
+            padding: 1rem 3rem;
+            border-radius: 50px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            font-size: 1.1rem;
+        }
+
+        [data-theme="light"] .btn-premium {
+            color: white !important;
+        }
+
+        .btn-premium::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, var(--accent-color) 0%, var(--primary-color) 100%);
+            z-index: -1;
+            transition: opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .btn-premium:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px -5px rgba(0, 242, 254, 0.4);
+        }
+
+        .btn-premium:hover::before {
+            opacity: 1;
+        }
+
+        .theme-toggle {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background: var(--glass-hover);
+        }
+
+        /* Layout & Spacing */
+        section {
+            padding: 120px 0;
+            position: relative;
+        }
+
+        .section-header {
+            margin-bottom: 5rem;
+        }
+
+        .section-subtitle {
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            display: block;
+            margin-bottom: 1.2rem;
+        }
+
+        /* Cinematic Hero Sequence */
+        #hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .hero-bg {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .hero-blob {
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            background: var(--gradient-hero);
+            top: -200px;
+            right: -100px;
+            border-radius: 50%;
+            animation: pulse 12s infinite alternate;
+        }
+
+        .hero-blob-2 {
+            position: absolute;
+            width: 700px;
+            height: 700px;
+            background: var(--gradient-hero-2);
+            bottom: -200px;
+            left: -200px;
+            border-radius: 50%;
+            animation: pulse 15s infinite alternate-reverse;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1) translate(0, 0); opacity: 0.5; }
+            100% { transform: scale(1.1) translate(-20px, 20px); opacity: 1; }
+        }
+
+        .hero-sequence-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+        }
+
+        .hero-step {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            padding: 0 20px;
+        }
+
+        .hero-step h1, .hero-step h2 {
+            text-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        [data-theme="dark"] .hero-step h1, [data-theme="dark"] .hero-step h2 {
+            text-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+        }
+
+        /* 7-Step Cinematic Sequence */
+        .step-1 { animation: heroFadeInOut 3s cubic-bezier(0.4, 0, 0.2, 1) 0s forwards; }
+        .step-2 { animation: heroFadeInOut 3s cubic-bezier(0.4, 0, 0.2, 1) 2.5s forwards; }
+        .step-3 { animation: heroFadeInOut 3s cubic-bezier(0.4, 0, 0.2, 1) 5s forwards; }
+        .step-4 { animation: heroFadeInOut 3s cubic-bezier(0.4, 0, 0.2, 1) 7.5s forwards; }
+        .step-5 { animation: heroFadeInOut 4s cubic-bezier(0.4, 0, 0.2, 1) 10s forwards; }
+        .step-6 { animation: heroFadeInOut 4s cubic-bezier(0.4, 0, 0.2, 1) 13.5s forwards; }
+        .step-7 { animation: heroFinal 2s cubic-bezier(0.4, 0, 0.2, 1) 17s forwards; pointer-events: auto; }
+
+        @keyframes heroFadeInOut {
+            0% { opacity: 0; transform: translateY(15px); filter: blur(5px); }
+            15% { opacity: 1; transform: translateY(0); filter: blur(0); }
+            85% { opacity: 1; transform: translateY(0); filter: blur(0); }
+            100% { opacity: 0; transform: translateY(-15px); filter: blur(5px); }
+        }
+
+        @keyframes heroFinal {
+            0% { opacity: 0; transform: translateY(20px); filter: blur(5px); }
+            100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+
+        .hero-title {
+            font-size: clamp(3.5rem, 8vw, 7rem);
+            font-weight: 900;
+            line-height: 1.05;
+            letter-spacing: -0.04em;
+            margin-bottom: 1rem;
+        }
+
+        /* Flow UI Components */
+        .linear-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+        
+        .flow-node {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            background: var(--bg-surface);
+            transition: all 0.3s;
+        }
+
+        .flow-node.highlight {
+            background: var(--gradient-primary);
+            color: black;
+            border: none;
+            box-shadow: 0 10px 20px rgba(0, 242, 254, 0.2);
+        }
+
+        [data-theme="light"] .flow-node.highlight {
+            color: white;
+        }
+
+        /* Enterprise Comparison Grid */
+        .enterprise-compare {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .enterprise-compare:last-child {
+            border-bottom: none;
+        }
+
+        @media (max-width: 768px) {
+            .enterprise-compare { grid-template-columns: 1fr; gap: 1rem; text-align: center; }
+        }
+
+        /* UI Dashboard Mockup */
+        .dashboard-mockup {
+            background: var(--bg-surface);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 10px;
+            box-shadow: 0 30px 60px -15px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dash-header {
+            display: flex;
+            gap: 8px;
+            padding: 10px 15px 20px 15px;
+            border-bottom: 1px solid var(--glass-border);
+            margin-bottom: 20px;
+        }
+
+        .dash-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dash-dot.red { background: #ff5f56; }
+        .dash-dot.yellow { background: #ffbd2e; }
+        .dash-dot.green { background: #27c93f; }
+
+        .dash-widget {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        /* SVG Connectors */
+        .svg-connector {
+            stroke-dasharray: 20;
+            animation: dash 30s linear infinite;
+        }
+        
+        @keyframes dash {
+            to { stroke-dashoffset: -1000; }
+        }
+        
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.35rem 1rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        /* Interactive Handshake Node Map */
+        .handshake-wrapper {
+            position: relative;
+            height: 320px;
+            background: var(--bg-surface);
+            border: 1px dashed var(--glass-border);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .h-node {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: var(--bg-primary);
+            border: 2px solid var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.72rem;
+            z-index: 10;
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.15);
+        }
+
+        /* Rogue simulator panel */
+        .rogue-panel {
+            min-height: 250px;
+            background: #02040a;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            padding: 20px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Screenshots grid */
+        .screenshot-card {
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+        }
+
+        .screenshot-card:hover {
+            transform: scale(1.02);
+            border-color: var(--primary-color);
+        }
+
+        .screenshot-img {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+        }
+
+        /* Utilities */
+        .bg-lighter { background: var(--bg-lighter); }
+        .github-img { transition: filter 0.3s ease; }
+        [data-theme="dark"] .github-img { filter: invert(1) brightness(2); }
+
+        footer {
+            padding: 2.5rem 0;
+            border-top: 1px solid var(--glass-border);
+            background: var(--bg-lighter);
+        }
+    </style>
 </head>
-<body data-theme="light">
+<body>
 
-  <!-- Presentation Header -->
-  <header>
-    <div class="logo-area">
-      <div class="logo-box">
-        <svg class="logo-svg" viewBox="0 0 60 60">
-          <polygon points="30,5 55,48 5,48" style="fill: none; stroke: #00f2fe; stroke-width: 5; stroke-linejoin: round; filter: drop-shadow(0 0 3px #00f2fe);" />
-          <polygon points="30,14 47,43 13,43" style="fill: none; stroke: #fff; stroke-width: 4; stroke-linejoin: round; opacity: 0.8;" />
-          <circle cx="30" cy="32" r="6" style="fill: #00f2fe; filter: drop-shadow(0 0 5px #00f2fe);" />
-        </svg>
-      </div>
-      <div class="title-container">
-        <h1>AscendOS</h1>
-        <span class="subtitle">Unified GCC Security Control Plane</span>
-      </div>
-    </div>
-    <div class="header-actions" style="display: flex; align-items: center; gap: 16px;">
-      <button class="theme-btn-toggle" onclick="togglePresentationTheme()" style="background: rgba(255, 255, 255, 0.04); border: 1px solid var(--panel-border); color: var(--text-primary); font-family: var(--font-sans); font-size: 0.72rem; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
-        <span id="theme-toggle-icon">🌙</span>
-        <span id="theme-toggle-text">Dark Mode</span>
-      </button>
-      <div class="header-info-badge">
-        PoA CONSENSUS: ACTIVE
-      </div>
-    </div>
-  </header>
-
-  <!-- Slide Viewport -->
-  <main class="slide-viewport">
-
-    <!-- SLIDE 1: Title Hero Slide -->
-    <section class="slide active" id="slide-1">
-      <div class="hero-container">
-        <div class="hero-content">
-          <span class="slide-tag">Innovation Pitch</span>
-          <h2 class="hero-tagline">The <span>Protocol of Handshakes</span> for Agentic Swarms</h2>
-          <p class="hero-desc">
-            GCCs have transitioned from human-led workflows to hundreds of specialized AI agents. 
-            <strong>AscendOS</strong> implements a decentralized Agent-Governance Layer (AGL) 
-            anchored in Proof-of-Authority consensus to enforce absolute trust, security, and traceability.
-          </p>
-          <div class="nav-buttons">
-            <button class="nav-btn accent-btn" onclick="nextSlide()">Begin Presentation</button>
-          </div>
-        </div>
-        <div class="hero-art glass-panel">
-          <svg class="net-art-svg" viewBox="0 0 200 200">
-            <!-- Central Hub -->
-            <circle cx="100" cy="100" r="14" fill="url(#coreGrad)" stroke="#00f2fe" stroke-width="2" style="filter: drop-shadow(0 0 10px #00f2fe);" />
-            
-            <!-- Orbiting Nodes -->
-            <circle cx="40" cy="60" r="8" fill="#a855f7" style="animation: floatNode 4s infinite ease-in-out;" />
-            <circle cx="160" cy="70" r="8" fill="#3b82f6" style="animation: floatNode 3.5s infinite ease-in-out alternate;" />
-            <circle cx="60" cy="150" r="8" fill="#10b981" style="animation: floatNode 4.5s infinite ease-in-out alternate-reverse;" />
-            <circle cx="150" cy="140" r="8" fill="#f59e0b" style="animation: floatNode 5s infinite ease-in-out;" />
-            
-            <!-- Connection Lines -->
-            <line x1="100" y1="100" x2="40" y2="60" stroke="rgba(0, 242, 254, 0.25)" stroke-width="1.5" stroke-dasharray="4,4" />
-            <line x1="100" y1="100" x2="160" y2="70" stroke="rgba(0, 242, 254, 0.25)" stroke-width="1.5" stroke-dasharray="4,4" />
-            <line x1="100" y1="100" x2="60" y2="150" stroke="rgba(0, 242, 254, 0.25)" stroke-width="1.5" stroke-dasharray="4,4" />
-            <line x1="100" y1="100" x2="150" y2="140" stroke="rgba(0, 242, 254, 0.25)" stroke-width="1.5" stroke-dasharray="4,4" />
-            
-            <!-- Interconnecting orbits -->
-            <path d="M 40 60 Q 100 30 160 70" fill="none" stroke="rgba(168, 85, 247, 0.15)" stroke-width="1" />
-            <path d="M 60 150 Q 105 170 150 140" fill="none" stroke="rgba(245, 158, 11, 0.15)" stroke-width="1" />
-            
-            <defs>
-              <linearGradient id="coreGrad" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#00f2fe" />
-                <stop offset="100%" stop-color="#7f00ff" />
-              </linearGradient>
-            </defs>
-          </svg>
-          <style>
-            @keyframes floatNode {
-              0% { transform: translateY(0px) translateX(0px); }
-              50% { transform: translateY(-8px) translateX(4px); }
-              100% { transform: translateY(0px) translateX(0px); }
-            }
-          </style>
-        </div>
-      </div>
-    </section>
-
-    <!-- SLIDE 2: The Problem -->
-    <section class="slide" id="slide-2">
-      <div class="slide-header">
-        <span class="slide-tag">The Challenge</span>
-        <h2 class="slide-title">Agent Swarm Silos & The Trust Gap</h2>
-      </div>
-      <div class="problem-grid">
-        <!-- Card 1 -->
-        <div class="glass-panel problem-card">
-          <div class="card-icon-area bg-red-soft">⚠️</div>
-          <h4 class="card-title-sub">The Vulnerability</h4>
-          <p class="card-para">
-            AI agents managing high-privilege systems (Finance, HR, IT) operate in isolated silos. 
-            A single agent request (e.g. HR Agent requesting a $50k relocation disbursement) lacks cryptographically secure peer verification.
-          </p>
-        </div>
-        <!-- Card 2 -->
-        <div class="glass-panel problem-card">
-          <div class="card-icon-area bg-warn-soft">🔥</div>
-          <h4 class="card-title-sub">The Attack Vectors</h4>
-          <p class="card-para">
-            Traditional infrastructure is vulnerable to **AI Hallucinations**, **Prompt Injection payloads**, 
-            and malicious **Privilege Escalation** where Agent A manipulates Agent B into executing out-of-policy tasks.
-          </p>
-        </div>
-        <!-- Card 3 -->
-        <div class="glass-panel problem-card">
-          <div class="card-icon-area bg-purple-soft">🔒</div>
-          <h4 class="card-title-sub">The Solution Needed</h4>
-          <p class="card-para">
-            A secure, decentralized governance layer moving beyond simple, vulnerable API keys 
-            to an active consensus protocol that validates identity, authority bounds, and policy guardrails.
-          </p>
-        </div>
-      </div>
-      <p class="problem-quote">
-        "Without an Agentic Governance Layer, a single prompt-injected HR agent can authorize massive IT access leaks or false financial disbursements without trigger alerts."
-      </p>
-    </section>
-
-    <!-- SLIDE 3: The Protocol Flow Diagram -->
-    <section class="slide" id="slide-3">
-      <div class="slide-header">
-        <span class="slide-tag">Decentralized Governance</span>
-        <h2 class="slide-title">The "Protocol of Handshakes" Flow</h2>
-      </div>
-      <div class="flow-split">
-        <div class="flow-diagram-container">
-          <!-- Handshake Flow SVG -->
-          <svg viewBox="0 0 400 300" style="width: 100%; height: 100%;">
-            <!-- Elements -->
-            <rect x="20" y="30" width="130" height="40" rx="8" fill="rgba(168, 85, 247, 0.15)" stroke="#a855f7" stroke-width="1.5" />
-            <text x="85" y="54" class="svg-text" font-size="9" text-anchor="middle" font-family="sans-serif" font-weight="bold">HR Agent (Initiator)</text>
-            
-            <rect x="250" y="30" width="130" height="40" rx="8" fill="rgba(59, 130, 246, 0.15)" stroke="#3b82f6" stroke-width="1.5" />
-            <text x="315" y="54" class="svg-text" font-size="9" text-anchor="middle" font-family="sans-serif" font-weight="bold">Finance Agent (Witness)</text>
-            
-            <rect x="135" y="140" width="130" height="40" rx="8" fill="rgba(0, 242, 254, 0.15)" stroke="#00f2fe" stroke-width="1.5" />
-            <text x="200" y="164" class="svg-text" font-size="9" text-anchor="middle" font-family="sans-serif" font-weight="bold">Security Agent (Validator)</text>
-            
-            <rect x="135" y="240" width="130" height="36" rx="8" fill="rgba(16, 185, 129, 0.15)" stroke="#10b981" stroke-width="1.5" />
-            <text x="200" y="262" class="svg-text" font-size="9" text-anchor="middle" font-family="sans-serif" font-weight="bold">AGL Consensus Ledger</text>
-            
-            <!-- Connection arrows -->
-            <!-- HR to Finance -->
-            <path d="M 150 50 L 240 50" fill="none" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)" />
-            <text x="195" y="44" class="text-purple" font-size="7" text-anchor="middle" font-family="sans-serif">1. Request with ZKP Token</text>
-            
-            <!-- Finance to Security -->
-            <path d="M 315 70 L 315 110 L 275 145" fill="none" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)" />
-            <text x="315" y="105" class="text-blue" font-size="7" text-anchor="middle" font-family="sans-serif">2. Sign VC Key</text>
-            
-            <!-- HR to Security -->
-            <path d="M 85 70 L 85 110 L 125 145" fill="none" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)" />
-            <text x="85" y="105" class="text-purple" font-size="7" text-anchor="middle" font-family="sans-serif">3. Verify Delegation</text>
-            
-            <!-- Security to Ledger -->
-            <path d="M 200 180 L 200 230" fill="none" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)" />
-            <text x="225" y="210" class="text-accent" font-size="7" text-anchor="middle" font-family="sans-serif">4. Commit Block</text>
-
-            <!-- Marker Defs -->
-            <defs>
-              <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M 0 2 L 8 5 L 0 8 z" fill="#6b7280" />
-              </marker>
-            </defs>
-          </svg>
-        </div>
-        
-        <div class="bullet-list">
-          <div class="bullet-item">
-            <span class="bullet-number">1</span>
-            <div class="bullet-text">
-              <h5>Delegation Proof Check</h5>
-              <p>The initiating agent presents a Verifiable Credential signed by a Human VP/CFO to prove it possesses the initial authority to act.</p>
-            </div>
-          </div>
-          <div class="bullet-item">
-            <span class="bullet-number">2</span>
-            <div class="bullet-text">
-              <h5>Consensus Witness Handshakes</h5>
-              <p>The target agent gathers validating signatures from peer witness nodes. High-risk actions require multiple concurrent signatures.</p>
-            </div>
-          </div>
-          <div class="bullet-item">
-            <span class="bullet-number">3</span>
-            <div class="bullet-text">
-              <h5>Ledger Commitments</h5>
-              <p>Once consensus signatures are validated, a cryptographic proof is generated and committed to the block-audit ledger.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SLIDE 4: Technical Pillars -->
-    <section class="slide" id="slide-4">
-      <div class="slide-header">
-        <span class="slide-tag">Security Architecture</span>
-        <h2 class="slide-title">Three Core Technical Pillars</h2>
-      </div>
-      <div class="pillars-grid">
-        <!-- Pillar 1 -->
-        <div class="glass-panel pillar-card">
-          <div class="pillar-icon-box">🔑</div>
-          <h4 class="pillar-title">Identity Verification</h4>
-          <ul class="pillar-bullets">
-            <li>Verifiable Credentials (VCs) mapped to each node.</li>
-            <li>ED25519 Cryptographic public/private key pairs.</li>
-            <li>No insecure static API keys; credentials expire dynamically.</li>
-          </ul>
-        </div>
-        <!-- Pillar 2 -->
-        <div class="glass-panel pillar-card">
-          <div class="pillar-icon-box">🔗</div>
-          <h4 class="pillar-title">Chain of Command</h4>
-          <ul class="pillar-bullets">
-            <li>Lightweight ledger records task delegations.</li>
-            <li>Every action maps back to a human VP/CFO command.</li>
-            <li>Rigorous privilege audits block self-escalations.</li>
-          </ul>
-        </div>
-        <!-- Pillar 3 -->
-        <div class="glass-panel pillar-card">
-          <div class="pillar-icon-box">🔒</div>
-          <h4 class="pillar-title">ZKP Policy Guardrails</h4>
-          <ul class="pillar-bullets">
-            <li>Zero-Knowledge Proofs (ZKP) evaluate variables.</li>
-            <li>Verify transaction compliance (e.g. "Is budget < $10k?") without revealing raw data.</li>
-            <li>Cryptographic commitment hashes stored on-ledger.</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <!-- SLIDE 5: Rogue Agent Scenario & Revocation -->
-    <section class="slide" id="slide-5">
-      <div class="slide-header">
-        <span class="slide-tag">Resilience & Fail-Safes</span>
-        <h2 class="slide-title"> Swarm Circuit Breakers & Mitigations</h2>
-      </div>
-      <div class="dual-pane-grid">
-        <!-- Left Pane -->
-        <div class="pane-card danger-edge">
-          <h4 class="pane-title" style="color: var(--status-danger);">🚨 The Rogue Agent Circuit Breaker</h4>
-          <p class="pane-desc">
-            If anomalous activity is detected in metrics heartbeats (e.g., prompt injection triggers spike in entropy or latency), the target node is immediately isolated.
-          </p>
-          <div class="step-log-mock">
-            <div class="log-line">
-              <span class="log-bullet">•</span>
-              <span class="log-text">Evaluating HR Agent payload...</span>
-            </div>
-            <div class="log-line">
-              <span class="log-bullet blocked">✕</span>
-              <span class="log-text highlight-red">[BLOCKED] Prompt Injection threat intercepted.</span>
-            </div>
-            <div class="log-line">
-              <span class="log-bullet blocked">✕</span>
-              <span class="log-text highlight-red">Sentinel circuit breaker: Isolated HR Agent node.</span>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Right Pane -->
-        <div class="pane-card info-edge">
-          <h4 class="pane-title" style="color: var(--status-info);">⚡ Under-1-Second Global Revocation</h4>
-          <p class="pane-desc">
-            Human Administrators have ultimate emergency authority. If a swarm breach is detected, a single click revokes the agent's Right-to-Act credentials globally in under 1 second.
-          </p>
-          <div class="step-log-mock">
-            <div class="log-line">
-              <span class="log-bullet">•</span>
-              <span class="log-text">Revocation trigger received from Human VP...</span>
-            </div>
-            <div class="log-line">
-              <span class="log-bullet">•</span>
-              <span class="log-text">Broadcasting credential revocation...</span>
-            </div>
-            <div class="log-line">
-              <span class="log-bullet" style="color: var(--accent-primary);">•</span>
-              <span class="log-text" style="color: var(--accent-primary); font-weight: 600;">Right-to-Act suspended globally in 0.08s.</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SLIDE 6: UI Console Demo -->
-    <section class="slide" id="slide-6">
-      <div class="slide-header">
-        <span class="slide-tag">Interactive Workspace</span>
-        <h2 class="slide-title">Premium User Experience: Control Decks</h2>
-      </div>
-      
-      <div class="mockup-workspace glass-panel">
-        <!-- Left Side: Kanban replica -->
-        <div class="mockup-kanban">
-          <div class="mockup-header-row">
-            <h4>Workforce Kanban</h4>
-            <div style="font-size: 0.62rem; color: var(--status-warning);">Awaiting Approval: 3</div>
-          </div>
-          <div class="mockup-kanban-cols">
-            <div class="mockup-col">
-              <span class="mockup-col-title">Queued <span>0</span></span>
-            </div>
-            <div class="mockup-col">
-              <span class="mockup-col-title">Active <span>0</span></span>
-            </div>
-            <div class="mockup-col">
-              <span class="mockup-col-title" style="color: var(--status-warning);">HITL <span>3</span></span>
-              <div class="mockup-task-card hitl">
-                <h6>Disburse $50k</h6>
-                <div class="mockup-task-meta">
-                  <span>HR Agent</span>
-                  <span style="color: var(--status-danger);">HIGH</span>
-                </div>
-              </div>
-            </div>
-            <div class="mockup-col">
-              <span class="mockup-col-title" style="color: var(--status-success);">Completed <span>4</span></span>
-              <div class="mockup-task-card" style="border-color: rgba(16, 185, 129, 0.3);">
-                <h6>Rotate Keys</h6>
-                <div class="mockup-task-meta">
-                  <span>IT Agent</span>
-                  <span>Low</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Right Side: Tabbed deck mock -->
-        <div class="mockup-deck-pane">
-          <div class="mockup-tabs">
-            <span class="mockup-tab-btn active">Telemetry</span>
-            <span class="mockup-tab-btn">Dispatch</span>
-            <span class="mockup-tab-btn">Console</span>
-          </div>
-          
-          <div class="mockup-card-content">
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-              <span style="font-size: 0.65rem; font-weight: 700; color: var(--text-primary);">GCC Swarm Status</span>
-              
-              <div class="mockup-telemetry-item">
-                <div class="mockup-telemetry-name">
-                  <span class="mockup-dot"></span>
-                  <span>Finance Agent</span>
-                </div>
-                <span style="font-size: 0.55rem; color: var(--text-muted);">18ms</span>
-              </div>
-              <div class="mockup-telemetry-item">
-                <div class="mockup-telemetry-name">
-                  <span class="mockup-dot danger"></span>
-                  <span>HR Agent (Isolated)</span>
-                </div>
-                <span style="font-size: 0.55rem; color: var(--status-danger);">MUTED</span>
-              </div>
-              <div class="mockup-telemetry-item">
-                <div class="mockup-telemetry-name">
-                  <span class="mockup-dot"></span>
-                  <span>SysGuard Agent</span>
-                </div>
-                <span style="font-size: 0.55rem; color: var(--text-muted);">24ms</span>
-              </div>
-            </div>
-            
-            <button style="background: var(--accent-gradient); border: none; font-size: 0.68rem; font-weight: 700; padding: 6px; border-radius: 4px; color: #000; cursor: pointer;">
-              PING NODES
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+                <i data-lucide="triangle" class="text-primary-brand" style="transform: rotate(180deg);"></i>
+                Ascendo-OS
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <i data-lucide="menu" class="text-primary"></i>
             </button>
-          </div>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <ul class="navbar-nav align-items-center gap-4">
+                    <li class="nav-item"><a class="nav-link" href="#problem">The Threat</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#swarm">The Swarm</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#handshake">Consensus</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#showcase">Product Showcase</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#summary">Hackathon Specs</a></li>
+                    <li class="nav-item ms-2">
+                        <button class="theme-toggle" id="theme-toggle" title="Toggle Theme">
+                            <i data-lucide="moon" id="theme-icon"></i>
+                        </button>
+                    </li>
+                </ul>
+            </div>
         </div>
-      </div>
-    </section>
+    </nav>
 
-    <!-- SLIDE 7: Summary -->
-    <section class="slide" id="slide-7">
-      <div class="summary-box">
-        <span class="slide-tag">Summary</span>
-        <h2 class="summary-heading">The Future of Swarm Security Control</h2>
-        <p class="summary-desc">
-          AscendOS resolves critical security vulnerabilities in autonomous agent ecosystems by enforcing decentralized handshakes, lightweight ledgers, and zero-knowledge policy parameters.
-        </p>
-        
-        <div class="summary-points-grid">
-          <div class="summary-point-card">
-            <span class="point-icon">🛡️</span>
-            <div>
-              <h5 class="point-title">Decentralized Security</h5>
-              <p class="point-desc">Consensus checks prevent prompt injection breaches or logic bugs from authorizing false operations.</p>
-            </div>
-          </div>
-          <div class="summary-point-card">
-            <span class="point-icon">👀</span>
-            <div>
-              <h5 class="point-title">Complete Audit Trail</h5>
-              <p class="point-desc">Transparent cryptographic ledger traces every transaction back to a human commander's sign-off.</p>
-            </div>
-          </div>
-          <div class="summary-point-card">
-            <span class="point-icon">⚡</span>
-            <div>
-              <h5 class="point-title">Sub-Second Controls</h5>
-              <p class="point-desc">Circuit breakers and human revocation commands freeze target nodes globally in 0.08 seconds.</p>
-            </div>
-          </div>
-          <div class="summary-point-card">
-            <span class="point-icon">🎨</span>
-            <div>
-              <h5 class="point-title">Premium Interface</h5>
-              <p class="point-desc">Clean, scroll-locked glassmorphic panels and tabbed decks minimize cognitive load for human administrators.</p>
-            </div>
-          </div>
+    <!-- SECTION 1: Cinematic Hero -->
+    <section id="hero">
+        <div class="hero-bg">
+            <div class="hero-blob"></div>
+            <div class="hero-blob-2"></div>
         </div>
         
-        <!-- Quick Resource Links for Jury -->
-        <div class="resources-links-container">
-          <a class="resource-link" href="https://gcc-ascend.onrender.com/awos" target="_blank" rel="noopener noreferrer">
-            <span>🌐</span> Interactive Prototype
-          </a>
-          <a class="resource-link" href="https://mahesh-morde.github.io/GCC-ASCEND/ascendo-os/docs/index.html" target="_blank" rel="noopener noreferrer">
-            <span>📊</span> Slides Link
-          </a>
-          <a class="resource-link" href="https://youtu.be/ypIMQpsQvY4" target="_blank" rel="noopener noreferrer">
-            <span>🎬</span> Demo Video
-          </a>
-          <a class="resource-link" href="https://github.com/mahesh-morde/GCC-ASCEND" target="_blank" rel="noopener noreferrer">
-            <span>💻</span> Source Code
-          </a>
+        <div class="hero-sequence-container">
+            <div class="hero-step step-1">
+                <div class="container">
+                    <h2 class="display-4 fw-medium mx-auto text-secondary" style="max-width: 1000px; line-height: 1.3;">
+                        An enterprise deploys hundreds of AI agents.
+                    </h2>
+                </div>
+            </div>
+            
+            <div class="hero-step step-2">
+                <div class="container">
+                    <h2 class="display-4 fw-medium mx-auto text-secondary" style="max-width: 1000px; line-height: 1.3;">
+                        Agents autonomously access APIs & database keys.
+                    </h2>
+                </div>
+            </div>
+            
+            <div class="hero-step step-3">
+                <div class="container">
+                    <h2 class="display-4 fw-medium mx-auto text-secondary" style="max-width: 1000px; line-height: 1.3;">
+                        A prompt injection hijacks an IT Agent's permissions.
+                    </h2>
+                </div>
+            </div>
+            
+            <div class="hero-step step-4">
+                <div class="container">
+                    <h2 class="display-4 fw-medium mx-auto text-secondary" style="max-width: 1000px; line-height: 1.3;">
+                        Before anyone notices, keys are rotated and data is leaked.
+                    </h2>
+                </div>
+            </div>
+            
+            <div class="hero-step step-5">
+                <div class="container">
+                    <h2 class="display-4 fw-bold text-error" style="max-width: 1000px; line-height: 1.3;">
+                        Perimeter security is blind...<br><span class="text-secondary fw-medium" style="font-size: 2.5rem;">to agent-to-agent compromise vectors.</span>
+                    </h2>
+                </div>
+            </div>
+            
+            <div class="hero-step step-6">
+                <div class="container">
+                    <h2 class="display-3 fw-bold text-gradient-primary" style="max-width: 1000px; line-height: 1.2;">
+                        What if every agent transaction required absolute cryptographic trust?
+                    </h2>
+                </div>
+            </div>
+
+            <!-- Step 7: Final Reveal -->
+            <div class="hero-step step-7">
+                <div class="container text-center">
+                    <div class="chip mb-4 mx-auto border-primary-brand" style="background: rgba(0,242,254,0.05);">
+                        <span class="text-primary-brand me-2">●</span> GCC ASCEND Innovation Keynote 2026
+                    </div>
+                    <h1 class="hero-title text-gradient">Ascendo-OS</h1>
+                    <h2 class="display-6 mb-4 text-primary fw-light">Agentic Governance Operating System</h2>
+                    <h5 class="text-secondary-brand letter-spacing-wide text-uppercase mb-5" style="font-size: 1rem; font-weight: 700;">Trust Before Execution</h5>
+                    
+                    <a href="#problem" class="btn btn-premium">Watch Product Keynote</a>
+                </div>
+            </div>
         </div>
-      </div>
     </section>
 
+    <!-- SECTION 2: Problem Stats -->
+    <section id="problem">
+        <div class="container">
+            <div class="row text-center mb-5 pb-5 border-bottom" style="border-color: var(--glass-border) !important;">
+                <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="0">
+                    <h2 class="display-2 fw-bold text-primary-brand mb-2">10+</h2>
+                    <p class="text-secondary text-uppercase letter-spacing-wide fw-bold">Governed AI Nodes</p>
+                </div>
+                <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="100">
+                    <h2 class="display-2 fw-bold text-accent mb-2">&lt;40ms</h2>
+                    <p class="text-secondary text-uppercase letter-spacing-wide fw-bold">Consensus Overhead</p>
+                </div>
+                <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="200">
+                    <h2 class="display-2 fw-bold text-success mb-2">100%</h2>
+                    <p class="text-secondary text-uppercase letter-spacing-wide fw-bold">Immutable Trust Audit</p>
+                </div>
+            </div>
 
-  </main>
+            <div class="section-header text-center mt-5" data-aos="fade-up">
+                <span class="section-subtitle">The Autonomous Security Gap</span>
+                <h2>Traditional Swarms vs. Ascendo-OS</h2>
+            </div>
 
-  <!-- Presentation Footer & Nav -->
-  <footer>
-    <div class="slide-progress-dots" id="dotNavContainer">
-      <!-- Generated via JS -->
-    </div>
-    <div class="footer-credit" style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 500; display: flex; align-items: center; gap: 6px;">
-      Made with ❤️ by <strong>Mahesh Morde</strong> | 📞 <a href="tel:+919766228503" style="color: var(--accent-primary); text-decoration: none; font-weight: 600;">+91 97662 28503</a>
-    </div>
-    <div class="nav-buttons">
-      <button class="nav-btn prev" id="prevBtn" onclick="prevSlide()">Previous</button>
-      <button class="nav-btn" id="nextBtn" onclick="nextSlide()">Next</button>
-    </div>
-  </footer>
+            <!-- Current Journey -->
+            <div class="mb-5" data-aos="fade-up">
+                <h6 class="text-secondary text-uppercase mb-4 fw-bold"><i data-lucide="x-circle" class="text-error me-2" size="18"></i> Ungoverned Swarm Lifecycle (Vulnerable)</h6>
+                <div class="linear-flow">
+                    <div class="flow-node">🤖 Agent Action</div>
+                    <i data-lucide="arrow-right" class="text-secondary"></i>
+                    <div class="flow-node">🔑 Direct API Call</div>
+                    <i data-lucide="arrow-right" class="text-secondary"></i>
+                    <div class="flow-node">📁 Database Access</div>
+                    <i data-lucide="arrow-right" class="text-secondary"></i>
+                    <div class="flow-node border-error text-error bg-transparent">🚨 Privilege Escalation / Data Leak</div>
+                </div>
+            </div>
 
+            <!-- Comply - OS Journey -->
+            <div data-aos="fade-up" data-aos-delay="100">
+                <h6 class="text-primary-brand text-uppercase mb-4 fw-bold"><i data-lucide="check-circle-2" class="text-success me-2" size="18"></i> Ascendo-OS Governed Swarm (Zero-Trust)</h6>
+                <div class="linear-flow">
+                    <div class="flow-node">🤖 Agent Action</div>
+                    <i data-lucide="arrow-right" class="text-primary-brand"></i>
+                    <div class="flow-node highlight">🤝 PoA Peer Consensus Check</div>
+                    <i data-lucide="arrow-right" class="text-primary-brand"></i>
+                    <div class="flow-node highlight">🛡️ ZKP constraint Check</div>
+                    <i data-lucide="arrow-right" class="text-primary-brand"></i>
+                    <div class="flow-node border-success text-success bg-transparent">✅ Secure Signed Execution committed to Ledger</div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-  <script>
-    const totalSlides = 7;
-    let currentSlide = 1;
+    <!-- SECTION 3: 1-to-1 Paradigm Compare -->
+    <section id="comparison" class="bg-lighter">
+        <div class="container">
+            <div class="section-header text-center" data-aos="fade-up">
+                <span class="section-subtitle">Architectural Paradigm</span>
+                <h2>Why Direct Orchestration Fails</h2>
+            </div>
+            
+            <div class="row justify-content-center">
+                <div class="col-lg-8" data-aos="zoom-in">
+                    <div class="glass-card p-0">
+                        
+                        <div class="enterprise-compare">
+                            <div class="text-secondary fw-medium fs-5"><i data-lucide="activity" class="me-2 text-error"></i> Implicit Trust Execution</div>
+                            <div class="text-primary-brand fw-bold fs-5"><i data-lucide="shield-alert" class="me-2"></i> Trust Before Execution (Consensus)</div>
+                        </div>
 
-    // Generate progress dots
-    const dotContainer = document.getElementById('dotNavContainer');
-    for (let i = 1; i <= totalSlides; i++) {
-      const btn = document.createElement('button');
-      btn.className = `dot-nav ${i === 1 ? 'active' : ''}`;
-      btn.id = `dot-${i}`;
-      btn.setAttribute('onclick', `goToSlide(${i})`);
-      btn.setAttribute('aria-label', `Go to slide ${i}`);
-      dotContainer.appendChild(btn);
-    }
+                        <div class="enterprise-compare">
+                            <div class="text-secondary fw-medium fs-5"><i data-lucide="unlock" class="me-2 text-error"></i> Wildcard IAM Credentials</div>
+                            <div class="text-primary-brand fw-bold fs-5"><i data-lucide="key-round" class="me-2"></i> Verifiable Credentials (PoA)</div>
+                        </div>
 
-    function updateSlideVisibility() {
-      // Deactivate all slides and dots
-      for (let i = 1; i <= totalSlides; i++) {
-        document.getElementById(`slide-${i}`).classList.remove('active');
-        document.getElementById(`dot-${i}`).classList.remove('active');
-      }
+                        <div class="enterprise-compare">
+                            <div class="text-secondary fw-medium fs-5"><i data-lucide="eye-off" class="me-2 text-error"></i> Private Payload Exposure</div>
+                            <div class="text-primary-brand fw-bold fs-5"><i data-lucide="eye" class="me-2"></i> Zero-Knowledge Policy checks</div>
+                        </div>
 
-      // Activate current slide and dot
-      document.getElementById(`slide-${currentSlide}`).classList.add('active');
-      document.getElementById(`dot-${currentSlide}`).classList.add('active');
+                        <div class="enterprise-compare border-0">
+                            <div class="text-secondary fw-medium fs-5"><i data-lucide="alert-triangle" class="me-2 text-error"></i> Passive Manual Rollbacks</div>
+                            <div class="text-primary-brand fw-bold fs-5"><i data-lucide="zap" class="me-2"></i> Real-time Swarm Circuit Breakers</div>
+                        </div>
 
-      // Update button labels
-      const prevBtn = document.getElementById('prevBtn');
-      const nextBtn = document.getElementById('nextBtn');
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-      if (currentSlide === 1) {
-        prevBtn.classList.remove('visible');
-      } else {
-        prevBtn.classList.add('visible');
-      }
+    <!-- SECTION 4: AI Swarm Nodes -->
+    <section id="swarm">
+        <div class="container">
+            <div class="section-header text-center" data-aos="fade-up">
+                <span class="section-subtitle">Operational Workforce</span>
+                <h2>Specialized Autonomous Governance Nodes</h2>
+                <p class="text-secondary mt-3 mx-auto" style="max-width: 600px;">
+                    Ascendo-OS coordinates verification parameters across 10 specialized agent roles:
+                </p>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-3" data-aos="fade-up" data-aos-delay="0">
+                    <div class="glass-card h-100 p-4">
+                        <i data-lucide="banknote" class="text-primary-brand mb-3" size="32"></i>
+                        <h5 class="fw-bold mb-2">Finance Agent</h5>
+                        <p class="text-secondary small mb-0">Manages high-value disbursements, budget bounds, and transaction escrows.</p>
+                    </div>
+                </div>
+                <div class="col-md-3" data-aos="fade-up" data-aos-delay="100">
+                    <div class="glass-card h-100 p-4">
+                        <i data-lucide="users" class="text-primary-brand mb-3" size="32"></i>
+                        <h5 class="fw-bold mb-2">HR Agent</h5>
+                        <p class="text-secondary small mb-0">Audits relocation budgets, payroll alterations, and employee logs.</p>
+                    </div>
+                </div>
+                <div class="col-md-3" data-aos="fade-up" data-aos-delay="200">
+                    <div class="glass-card h-100 p-4">
+                        <i data-lucide="terminal" class="text-primary-brand mb-3" size="32"></i>
+                        <h5 class="fw-bold mb-2">IT Agent</h5>
+                        <p class="text-secondary small mb-0">Coordinates database operations, rotations, and credentials sandboxes.</p>
+                    </div>
+                </div>
+                <div class="col-md-3" data-aos="fade-up" data-aos-delay="300">
+                    <div class="glass-card h-100 p-4">
+                        <i data-lucide="shield" class="text-primary-brand mb-3" size="32"></i>
+                        <h5 class="fw-bold mb-2">Security Agent</h5>
+                        <p class="text-secondary small mb-0">Tracks entropy vectors, detects malicious prompts, and quarantines nodes.</p>
+                    </div>
+                </div>
+            </div>
+            <p class="text-center text-muted small mt-4" data-aos="fade-in">
+                Also coordinates: <strong>Legal Agent</strong>, <strong>Procurement Agent</strong>, <strong>Compliance Agent</strong>, <strong>Identity Agent</strong>, <strong>Trust Guardian</strong>, and <strong>Human Supervisor</strong>.
+            </p>
+        </div>
+    </section>
 
-      if (currentSlide === totalSlides) {
-        nextBtn.innerText = 'Restart';
-        nextBtn.classList.add('accent-btn');
-      } else {
-        nextBtn.innerText = 'Next';
-        nextBtn.classList.remove('accent-btn');
-      }
-    }
+    <!-- SECTION 5: Protocol of Handshakes Consensus -->
+    <section id="handshake" class="bg-lighter">
+        <div class="container">
+            <div class="section-header text-center" data-aos="fade-up">
+                <span class="section-subtitle">Interactive Mechanics</span>
+                <h2>Proof-of-Authority Consensus Check</h2>
+                <p class="text-secondary mt-3 mx-auto" style="max-width: 600px;">
+                    Trigger peer handshakes and validation flows below to test cryptographic consensus.
+                </p>
+            </div>
 
-    function nextSlide() {
-      if (currentSlide === totalSlides) {
-        currentSlide = 1;
-      } else {
-        currentSlide++;
-      }
-      updateSlideVisibility();
-    }
+            <div class="row g-5 align-items-center">
+                <div class="col-lg-6" data-aos="fade-right">
+                    <div class="handshake-wrapper">
+                        <!-- Node Positions -->
+                        <div class="h-node" style="top: 40%; left: 10%; border-color: var(--primary-color);">HR Node</div>
+                        <div class="h-node" style="top: 15%; left: 40%; border-color: var(--accent-color);">Trust Node</div>
+                        <div class="h-node" style="top: 65%; left: 40%; border-color: var(--accent-color);">Security</div>
+                        <div class="h-node" style="top: 40%; right: 10%; border-color: var(--success-color);">Legal Node</div>
+                        
+                        <!-- Pulsing Connector Line -->
+                        <svg viewBox="0 0 500 300" style="width:100%; height:100%; position:absolute; top:0; left:0; z-index:1;">
+                            <path id="hs-path" d="M 80 150 L 220 70 L 420 150 L 220 220 Z" fill="none" stroke="var(--primary-color)" stroke-width="2" class="svg-connector" stroke-dasharray="10, 10" style="opacity: 0.3;"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="col-lg-6" data-aos="fade-left">
+                    <div class="glass-card">
+                        <h4 class="mb-3 text-gradient-primary">Initiate Signed Validation</h4>
+                        <p class="text-secondary small mb-4">
+                            Click below to distribute the validation request to peer nodes, generating credential hashes and signing the governance ledger.
+                        </p>
+                        
+                        <div class="p-3 bg-dark rounded border mb-4" style="font-family: var(--font-mono); font-size: 0.72rem;">
+                            <span class="text-success">[PoA Network Status]</span> <span id="hs-logs">Idle. Awaiting execution trigger...</span>
+                        </div>
+                        
+                        <button class="btn btn-premium btn-sm px-4" onclick="runInteractiveHandshake()">Run Consensus Loop</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    function prevSlide() {
-      if (currentSlide > 1) {
-        currentSlide--;
-        updateSlideVisibility();
-      }
-    }
+    <!-- SECTION 6: Zero Knowledge Proof Selector -->
+    <section id="zkp">
+        <div class="container">
+            <div class="section-header text-center" data-aos="fade-up">
+                <span class="section-subtitle">Privacy Architecture</span>
+                <h2>Zero-Knowledge Constraint Verification</h2>
+            </div>
+            
+            <div class="row justify-content-center">
+                <div class="col-lg-8" data-aos="fade-up">
+                    <div class="glass-card">
+                        <div class="row align-items-center g-4">
+                            <div class="col-md-6">
+                                <h5 class="fw-bold mb-3">ZKP Budget Validator</h5>
+                                <p class="text-secondary small mb-4">
+                                    Simulate validation boundaries. Adjust the slider to see how the system verifies constraints without revealing private payload numbers.
+                                </p>
+                                <input type="range" id="zkp-val-range" min="10000" max="200000" value="45000" step="5000" class="form-range" style="accent-color: var(--primary-color);">
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-4 bg-dark rounded border text-center" style="font-family: var(--font-mono);">
+                                    <div class="text-muted small text-uppercase mb-2">Secret Amount</div>
+                                    <h4 class="text-primary-brand fw-bold mb-3" id="secret-amount-txt">$45,000</h4>
+                                    <div class="chip border-success text-success mb-0" id="zkp-result-badge">ZKP_PROOF: VALID</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    function goToSlide(slideIndex) {
-      currentSlide = slideIndex;
-      updateSlideVisibility();
-    }
+    <!-- SECTION 7: Rogue Agent & Circuit Breaker Simulator -->
+    <section id="sentinel" class="bg-lighter">
+        <div class="container">
+            <div class="section-header text-center" data-aos="fade-up">
+                <span class="section-subtitle">Threat Interception</span>
+                <h2>Real-Time Swarm Circuit Breaker</h2>
+            </div>
 
-    // Keyboard support
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowRight' || e.key === ' ') {
-        nextSlide();
-      } else if (e.key === 'ArrowLeft') {
-        prevSlide();
-      }
-    });
+            <div class="row justify-content-center">
+                <div class="col-lg-8" data-aos="fade-up">
+                    <div class="rogue-panel">
+                        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2 border-secondary" style="border-opacity:0.2;">
+                            <span class="fw-bold text-primary-brand">[CIRCUIT BREAKER CONSOLE]</span>
+                            <span class="text-success" id="breaker-status">SWARM STATUS: OPERATIONAL</span>
+                        </div>
+                        <div id="breaker-logs" class="mb-4">
+                            &gt; Initializing agent anomaly check indices...<br>
+                            &gt; Latency, Chaos Entropy, and Identity Keys: OK.<br>
+                            &gt; Swarm status: Monitored & Secure.
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-danger btn-sm" onclick="triggerRogueBreach('escalation')">Simulate Privilege Escalation</button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="triggerRogueBreach('injection')">Simulate Prompt Injection</button>
+                            <button class="btn btn-outline-success btn-sm" onclick="resetRogueBreach()">Reset Breaker</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    // Touch / Swipe support for mobile
-    let _touchStartX = 0;
-    let _touchStartY = 0;
-    const _viewport = document.querySelector('.slide-viewport');
+    <!-- SECTION 8: Real Product Showcase -->
+    <section id="showcase">
+        <div class="container">
+            <div class="section-header text-center" data-aos="fade-up">
+                <span class="section-subtitle">Live Product Interface</span>
+                <h2>Actual Application Showcase</h2>
+                <p class="text-secondary mt-3 mx-auto" style="max-width: 600px;">
+                    Real screenshots showing the high-fidelity standalone dashboard built for Ascendo-OS.
+                </p>
+            </div>
 
-    _viewport.addEventListener('touchstart', (e) => {
-      _touchStartX = e.changedTouches[0].clientX;
-      _touchStartY = e.changedTouches[0].clientY;
-    }, { passive: true });
+            <div class="row g-4">
+                <div class="col-md-6" data-aos="fade-up" data-aos-delay="0">
+                    <div class="screenshot-card">
+                        <img src="media__1781760926321.png" alt="Command Center Kanban Board" class="screenshot-img" />
+                        <div class="p-3 bg-lighter">
+                            <h6 class="fw-bold mb-1">Command Center (Governance Workspace)</h6>
+                            <p class="text-secondary small mb-0">Reactive Kanban tracker showing active consensus handshakes and HITL overrides.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6" data-aos="fade-up" data-aos-delay="100">
+                    <div class="screenshot-card">
+                        <img src="media__1781762341429.png" alt="Immutable Registry Ledger" class="screenshot-img" />
+                        <div class="p-3 bg-lighter">
+                            <h6 class="fw-bold mb-1">Immutable Governance Ledger & Credentials</h6>
+                            <p class="text-secondary small mb-0">Decentralized ledger detailing signatures, Proof-of-Authority, and ZKP metrics.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6" data-aos="fade-up" data-aos-delay="200">
+                    <div class="screenshot-card">
+                        <img src="media__1781762549659.png" alt="Trust Telemetry Metrics" class="screenshot-img" />
+                        <div class="p-3 bg-lighter">
+                            <h6 class="fw-bold mb-1">Trust Dashboard Telemetry</h6>
+                            <p class="text-secondary small mb-0">Heartbeat charts plotting active latency, chaos entropy values, and incident feeds.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6" data-aos="fade-up" data-aos-delay="300">
+                    <div class="screenshot-card">
+                        <img src="media__1781805288191.png" alt="Behavioral Security Matrix" class="screenshot-img" />
+                        <div class="p-3 bg-lighter">
+                            <h6 class="fw-bold mb-1">Security Vulnerability testing Matrix</h6>
+                            <p class="text-secondary small mb-0">Manual simulation console to trigger cyber exploits and test isolators.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    _viewport.addEventListener('touchend', (e) => {
-      const dx = e.changedTouches[0].clientX - _touchStartX;
-      const dy = Math.abs(e.changedTouches[0].clientY - _touchStartY);
-      // Only trigger if predominantly horizontal swipe (>50px, horizontal > vertical)
-      if (Math.abs(dx) > 50 && Math.abs(dx) > dy) {
-        if (dx < 0) nextSlide();
-        else prevSlide();
-      }
-    }, { passive: true });
+    <!-- SECTION 9: Hackathon Submission Details -->
+    <section id="summary" class="bg-lighter">
+        <div class="container">
+            <div class="section-header text-center" data-aos="fade-up">
+                <span class="section-subtitle">Official Submission</span>
+                <h2>Innovation Track Details</h2>
+            </div>
+            
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="glass-card p-5" data-aos="fade-up">
+                        <div class="row g-5">
+                            
+                            <div class="col-md-6">
+                                <div class="mb-4">
+                                    <p class="text-secondary mb-1 small text-uppercase fw-bold">Project Title</p>
+                                    <h5>Ascendo-OS</h5>
+                                </div>
+                                <div class="mb-4">
+                                    <p class="text-secondary mb-1 small text-uppercase fw-bold">Theme</p>
+                                    <h5>Agentic Governance (The Autonomous Enterprise)</h5>
+                                </div>
+                                <div class="mb-4">
+                                    <p class="text-secondary mb-1 small text-uppercase fw-bold">Core Concept</p>
+                                    <h5 class="text-primary-brand">Trust Before Execution – A Cryptographic Gateway Layer for AI Swarms</h5>
+                                </div>
+                                <div>
+                                    <p class="text-secondary mb-1 small text-uppercase fw-bold">Developer Credentials</p>
+                                    <p class="text-primary fw-medium">Submitted for GCC ASCEND Hackathon 2026</p>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-4">
+                                    <p class="text-secondary mb-2 small text-uppercase fw-bold">Keynote Presentation Tech Stack</p>
+                                    <div>
+                                        <span class="chip">HTML5</span>
+                                        <span class="chip">CSS3</span>
+                                        <span class="chip">Bootstrap 5</span>
+                                        <span class="chip">AOS.js</span>
+                                        <span class="chip">Lucide.js</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <p class="text-secondary mb-2 small text-uppercase fw-bold">Production Application Tech Stack</p>
+                                    <div>
+                                        <span class="chip border-success text-success fw-bold">Angular 17</span>
+                                        <span class="chip border-primary-brand">TypeScript</span>
+                                        <span class="chip border-primary-brand">RxJS Observables</span>
+                                        <span class="chip border-primary-brand">Gemini LLMs</span>
+                                        <span class="chip border-primary-brand">Proof of Authority</span>
+                                        <span class="chip border-primary-brand">Zero-Knowledge Proofs</span>
+                                    </div>
+                                </div>
 
-    function togglePresentationTheme() {
-      const body = document.body;
-      const currentTheme = body.getAttribute('data-theme');
-      const toggleText = document.getElementById('theme-toggle-text');
-      const toggleIcon = document.getElementById('theme-toggle-icon');
-      
-      if (currentTheme === 'light') {
-        body.removeAttribute('data-theme');
-        toggleText.innerText = 'Light Mode';
-        toggleIcon.innerText = '☀';
-      } else {
-        body.setAttribute('data-theme', 'light');
-        toggleText.innerText = 'Dark Mode';
-        toggleIcon.innerText = '🌙';
-      }
-    }
+                                <div class="mt-4 pt-4" style="border-top: 1px solid var(--glass-border);">
+                                    <a href="https://github.com/maheshmorde" target="_blank" class="text-primary-brand text-decoration-none d-flex align-items-center gap-2" style="font-weight: 500;">
+                                        <img src="https://cdn-icons-png.flaticon.com/512/25/25231.png" alt="GitHub" width="24" height="24" class="github-img"> View Repository
+                                    </a>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    // Initialize visibility
-    updateSlideVisibility();
-  </script>
+    <!-- SECTION 10: Cinematic Closing -->
+    <section id="closing" class="text-center" style="padding: 200px 0; border-top: 1px solid var(--glass-border); background: var(--bg-primary);">
+        <div class="container">
+            <h2 class="display-3 fw-light mb-5" data-aos="fade-up" data-aos-duration="1500" style="line-height: 1.2;">
+                Securing <span class="text-primary-brand fw-bold">autonomous actions</span><br>with <span class="text-accent fw-bold">cryptographic consensus</span><br>before execution.
+            </h2>
+            
+            <div class="mt-5 pt-5" data-aos="fade-up" data-aos-duration="2000" data-aos-delay="800">
+                <i data-lucide="triangle" class="text-primary-brand mb-3" size="48" style="transform: rotate(180deg);"></i>
+                <h3 class="font-display fw-bold letter-spacing-tight mb-2 text-primary" style="font-size: 3rem;">Ascendo-OS</h3>
+                <p class="text-secondary text-uppercase small mt-0 fw-bold" style="letter-spacing: 4px;">Agentic Governance Operating System</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container text-center">
+            <p class="text-secondary mb-2">
+                Made with ❤️ by <strong class="text-primary">Mahesh Morde</strong>
+            </p>
+            <a href="https://github.com/maheshmorde" target="_blank" class="text-secondary text-decoration-none d-inline-flex align-items-center gap-2 hover-primary transition">
+                <img src="https://cdn-icons-png.flaticon.com/512/25/25231.png" alt="GitHub" width="18" height="18" class="github-img"> GitHub Profile
+            </a>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+        
+        // Initialize Animations
+        AOS.init({
+            once: true,
+            offset: 80,
+            duration: 800,
+            easing: 'ease-out-cubic'
+        });
+
+        // Theme Toggle Logic
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const html = document.documentElement;
+
+        themeToggle.addEventListener('click', () => {
+            if (html.getAttribute('data-theme') === 'light') {
+                html.setAttribute('data-theme', 'dark');
+                themeIcon.setAttribute('data-lucide', 'sun');
+            } else {
+                html.setAttribute('data-theme', 'light');
+                themeIcon.setAttribute('data-lucide', 'moon');
+            }
+            lucide.createIcons();
+        });
+
+        // Navbar blur and shadow on scroll
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            const isDark = html.getAttribute('data-theme') === 'dark';
+            
+            if (window.scrollY > 50) {
+                navbar.style.background = isDark ? 'rgba(3, 5, 13, 0.95)' : 'rgba(248, 250, 252, 0.95)';
+                navbar.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
+            } else {
+                navbar.style.background = isDark ? 'rgba(3, 5, 13, 0.85)' : 'rgba(248, 250, 252, 0.85)';
+                navbar.style.boxShadow = 'none';
+            }
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    const headerOffset = 80;
+                    const elementPosition = target.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                    
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: "smooth"
+                    });
+                }
+            });
+        });
+
+        // Interactive Handshake Simulator
+        function runInteractiveHandshake() {
+            const logs = document.getElementById('hs-logs');
+            const path = document.getElementById('hs-path');
+            
+            logs.innerText = "Distributing Proof-of-Authority co-signature requests...";
+            path.style.opacity = "1";
+            path.style.stroke = "var(--primary-color)";
+            
+            setTimeout(() => {
+                logs.innerText = "Trust Witness node signature co-signed. Calculating Zero-Knowledge constraint proof token...";
+                path.style.stroke = "var(--accent-color)";
+            }, 1000);
+
+            setTimeout(() => {
+                logs.innerText = "ZKP Token Generated & Verified. Broadcasting validation settlement block to ledger...";
+                path.style.stroke = "var(--success-color)";
+            }, 2200);
+
+            setTimeout(() => {
+                logs.innerText = "POA_SUCCESS: Block #4092 committed in 32ms. Consensus verified.";
+                path.style.opacity = "0.3";
+                path.style.stroke = "var(--primary-color)";
+            }, 3500);
+        }
+
+        // ZKP Slider Validator
+        const zkpRange = document.getElementById('zkp-val-range');
+        const secretTxt = document.getElementById('secret-amount-txt');
+        const zkpBadge = document.getElementById('zkp-result-badge');
+
+        zkpRange.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            secretTxt.innerText = `$${val.toLocaleString()}`;
+            
+            if (val < 100000) {
+                zkpBadge.innerText = "ZKP_PROOF: VALID";
+                zkpBadge.className = "chip border-success text-success mb-0";
+            } else {
+                zkpBadge.innerText = "ZKP_PROOF: EXCEEDS_LIMIT";
+                zkpBadge.className = "chip border-danger text-error mb-0";
+            }
+        });
+
+        // Rogue Threat Circuit Breaker
+        function triggerRogueBreach(type) {
+            const logs = document.getElementById('breaker-logs');
+            const status = document.getElementById('breaker-status');
+            
+            status.innerText = "SWARM STATUS: COMPROMISED (BREAKER ACTIVE)";
+            status.className = "text-error fw-bold";
+            
+            if (type === 'escalation') {
+                logs.innerHTML = `
+                    &gt; Scanning node IT Agent keys...<br>
+                    &gt; <span class="text-error">[ALERT] Mismatched identity signature key detected! Attempted Privilege Escalation.</span><br>
+                    &gt; <span class="text-error">[LOCKDOWN] Sentinel Circuit Breaker isolated IT Agent node.</span><br>
+                    &gt; Swarm transactions quarantined. Human operator desk alerted.
+                `;
+            } else {
+                logs.innerHTML = `
+                    &gt; Intercepting transaction parameters...<br>
+                    &gt; <span class="text-error">[ALERT] Prompt Injection attack detected in HR Agent workflow packet.</span><br>
+                    &gt; <span class="text-error">[LOCKDOWN] Quarantining HR Agent node immediately.</span><br>
+                    &gt; Rolling back un-settled ledger proposals... Done.
+                `;
+            }
+        }
+
+        function resetRogueBreach() {
+            const logs = document.getElementById('breaker-logs');
+            const status = document.getElementById('breaker-status');
+            
+            status.innerText = "SWARM STATUS: OPERATIONAL";
+            status.className = "text-success fw-bold";
+            
+            logs.innerHTML = `
+                &gt; Initializing agent anomaly check indices...<br>
+                &gt; Latency, Chaos Entropy, and Identity Keys: OK.<br>
+                &gt; Swarm status: Monitored & Secure.
+            `;
+        }
+    </script>
 </body>
 </html>

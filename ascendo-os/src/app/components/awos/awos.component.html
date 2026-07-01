@@ -2,8 +2,8 @@
   <!-- Interactive Kanban Workspace Header -->
   <div class="awos-header-row glass-panel">
     <div class="header-main-title">
-      <h3>Augmented Workforce Kanban</h3>
-      <p class="section-desc">Manage decentralized swarm task pipelines, HITL security checkpoints, and ledger commitments.</p>
+      <h3>Enterprise Command Center</h3>
+      <p class="section-desc">Manage decentralized AI agent task pipelines, Zero-Knowledge compliance checkpoints, and immutable ledger commitments.</p>
     </div>
     
     <!-- Micro Swarm Status Pill -->
@@ -15,17 +15,17 @@
       <span class="pill-sep"></span>
       <div class="pill-item text-info">
         <span class="status-indicator status-active"></span>
-        <span>Active: <strong>{{ stats.progress }}</strong></span>
+        <span>Active Mesh: <strong>{{ stats.progress }}</strong></span>
       </div>
       <span class="pill-sep"></span>
       <div class="pill-item text-warning" [class.pulse-glow]="stats.approval > 0">
         <span class="status-indicator status-warning" [class.alert-glow]="stats.approval > 0"></span>
-        <span>Awaiting HITL: <strong>{{ stats.approval }}</strong></span>
+        <span>Awaiting Approval: <strong>{{ stats.approval }}</strong></span>
       </div>
       <span class="pill-sep"></span>
       <div class="pill-item text-success">
         <span class="status-indicator status-active" style="background-color: var(--status-success); box-shadow: 0 0 8px var(--status-success);"></span>
-        <span>Completed: <strong>{{ stats.completed }}</strong></span>
+        <span>Committed: <strong>{{ stats.completed }}</strong></span>
       </div>
     </div>
   </div>
@@ -39,7 +39,7 @@
         <div class="kanban-col">
           <div class="col-header">
             <span class="dot queued-dot"></span>
-            <h4>Queued</h4>
+            <h4>Queue Workspace</h4>
             <span class="count">{{ stats.queued }}</span>
           </div>
           <div class="col-body">
@@ -66,7 +66,7 @@
         <div class="kanban-col">
           <div class="col-header">
             <span class="dot progress-dot"></span>
-            <h4>In Progress</h4>
+            <h4>Active Consensus</h4>
             <span class="count">{{ stats.progress }}</span>
           </div>
           <div class="col-body">
@@ -82,11 +82,11 @@
                     <span class="status-indicator" [class.status-warning]="isAgentQuarantined(t.assignedAgent)" [class.status-active]="!isAgentQuarantined(t.assignedAgent) && getAgentStatus(t.assignedAgent) === 'busy'"></span>
                     <span class="agent-name">{{ getAgentName(t.assignedAgent) }}</span>
                   </div>
-                  <span class="quarantine-badge" *ngIf="isAgentQuarantined(t.assignedAgent)">MUTED</span>
+                  <span class="quarantine-badge" *ngIf="isAgentQuarantined(t.assignedAgent)">QUARANTINED</span>
                 </div>
               </div>
             </div>
-            <div class="empty-placeholder" *ngIf="stats.progress === 0">No tasks running</div>
+            <div class="empty-placeholder" *ngIf="stats.progress === 0">No active consensus operations</div>
           </div>
         </div>
 
@@ -94,7 +94,7 @@
         <div class="kanban-col">
           <div class="col-header">
             <span class="dot approval-dot"></span>
-            <h4>Awaiting HITL</h4>
+            <h4>HITL Delegation</h4>
             <span class="count">{{ stats.approval }}</span>
           </div>
           <div class="col-body">
@@ -117,7 +117,7 @@
                 </div>
               </div>
             </div>
-            <div class="empty-placeholder" *ngIf="stats.approval === 0">No approvals pending</div>
+            <div class="empty-placeholder" *ngIf="stats.approval === 0">No delegation approvals pending</div>
           </div>
         </div>
 
@@ -125,7 +125,7 @@
         <div class="kanban-col">
           <div class="col-header">
             <span class="dot completed-dot"></span>
-            <h4>Completed</h4>
+            <h4>Ledger Committed</h4>
             <span class="count">{{ stats.completed }}</span>
           </div>
           <div class="col-body">
@@ -173,8 +173,8 @@
       <div class="deck-content-wrapper">
         <!-- 1. Interactive Agent Nodes Telemetry -->
         <div class="glass-panel telemetry-card" *ngIf="activeDeckTab === 'telemetry'">
-          <h4 class="panel-subtitle">GCC Swarm Nodes Telemetry</h4>
-          <p class="deck-sub-desc">Ping live agents to inspect connectivity, latency, and consensus availability status.</p>
+          <h4 class="panel-subtitle">Mesh Node Telemetry</h4>
+          <p class="deck-sub-desc">Ping live agents to inspect zero-trust connectivity, cryptographic latency, and status.</p>
           
           <div class="telemetry-list">
             <div class="telemetry-row" *ngFor="let a of agents" [class.muted-node]="isAgentQuarantined(a.id)">
@@ -197,13 +197,13 @@
 
         <!-- 2. Create Swarm Operation Form -->
         <div class="glass-panel form-card" *ngIf="activeDeckTab === 'dispatch'">
-          <h4 class="panel-subtitle">Create Swarm Operation</h4>
-          <p class="deck-sub-desc">Manually inject tasks and trigger autonomous governance consensus ledger verification.</p>
+          <h4 class="panel-subtitle">Dispatch Governance Request</h4>
+          <p class="deck-sub-desc">Manually dispatch governance requests and trigger multi-agent consensus ledger verification.</p>
           
           <form (submit)="createTask()" class="task-form">
             <div class="form-group">
-              <label for="taskTitle">Task Name / Context</label>
-              <input type="text" id="taskTitle" name="title" [(ngModel)]="newTaskTitle" placeholder="e.g. Disburse relocation expenses..." required class="form-input" />
+              <label for="taskTitle">Operation Context / Scope</label>
+              <input type="text" id="taskTitle" name="title" [(ngModel)]="newTaskTitle" placeholder="e.g. Audit SOX compliance controls..." required class="form-input" />
             </div>
 
             <div class="form-row">
@@ -212,12 +212,12 @@
                 <select id="taskRisk" name="risk" [(ngModel)]="newTaskRisk" class="form-select">
                   <option value="low">Low Risk</option>
                   <option value="medium">Medium Risk</option>
-                  <option value="high">High Risk (HITL)</option>
+                  <option value="high">High Risk (Requires HITL)</option>
                 </select>
               </div>
 
               <div class="form-group half">
-                <label for="taskAgent">Target Agent Swarm</label>
+                <label for="taskAgent">Target Initiating Node</label>
                 <select id="taskAgent" name="agent" [(ngModel)]="newTaskAgent" class="form-select">
                   <option *ngFor="let a of agents" [value]="a.id">{{ a.name.split(' (')[0] }}</option>
                 </select>
@@ -231,7 +231,7 @@
         <!-- 3. Task Console Logs Terminal -->
         <div class="glass-panel logs-card" *ngIf="activeDeckTab === 'console'">
           <div class="logs-header">
-            <h4 class="panel-subtitle">Orchestrator Execution Logs</h4>
+            <h4 class="panel-subtitle">TrustOS Ledger Logs</h4>
             <span class="active-task-pill" *ngIf="selectedTaskId">Task: #{{ selectedTaskId.substring(5) }}</span>
           </div>
           

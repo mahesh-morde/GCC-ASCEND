@@ -1,6 +1,6 @@
-# AscendOS Walkthrough
+# Ascend-OS Walkthrough
 
-We have successfully built and verified the complete implementation of **AscendOS**—the Unified GCC Orchestration & Security Control Plane. Below is a detailed summary of the files created, components built, and verification steps.
+We have successfully built and verified the complete implementation of **Ascend-OS**—the Unified GCC Orchestration & Security Control Plane. Below is a detailed summary of the files created, components built, and verification steps.
 
 ---
 

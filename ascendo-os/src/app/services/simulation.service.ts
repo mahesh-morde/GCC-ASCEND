@@ -51,22 +51,34 @@ export class SimulationService {
     { id: 'finance-agent', name: 'Finance Agent (FinPulse)', capabilities: ['Disbursements', 'Budget Audit', 'Escrow Management'], health: 100, status: 'idle' },
     { id: 'hr-agent', name: 'HR Agent (TalentFlow)', capabilities: ['Relocation Processing', 'Payroll Audits', 'Benefits Provisioning'], health: 100, status: 'idle' },
     { id: 'it-agent', name: 'IT Provisioner (SysGuard)', capabilities: ['Access Control', 'SSH Rotation', 'Resource Allocations'], health: 100, status: 'idle' },
-    { id: 'security-agent', name: 'Security Agent (Sentinel Node)', capabilities: ['Consensus Witness', 'Threat Quarantine', 'System Lockdown'], health: 100, status: 'idle' }
+    { id: 'security-agent', name: 'Security Agent (Sentinel Node)', capabilities: ['Consensus Witness', 'Threat Quarantine', 'System Lockdown'], health: 100, status: 'idle' },
+    { id: 'legal-agent', name: 'Legal Counsel (LexGuard)', capabilities: ['Contract Signing', 'IP Protection', 'Compliance Vetting'], health: 100, status: 'idle' },
+    { id: 'procurement-agent', name: 'Procurement (ProcureSafe)', capabilities: ['Vendor Bidding', 'PO Validation', 'Asset Ingestion'], health: 100, status: 'idle' },
+    { id: 'compliance-agent', name: 'Compliance Agent (ComplyAudit)', capabilities: ['Regulatory Filing', 'Audit Attestation', 'Risk Scoring'], health: 100, status: 'idle' },
+    { id: 'identity-agent', name: 'Identity Agent (IDShield)', capabilities: ['MFA Verification', 'Credential Signing', 'AD Sync'], health: 100, status: 'idle' },
+    { id: 'trust-guardian', name: 'Trust Guardian (TrustEngine)', capabilities: ['Consensus Rules', 'ZKP Generation', 'Ledger Integrity'], health: 100, status: 'idle' },
+    { id: 'human-supervisor', name: 'Human Supervisor (HITL)', capabilities: ['Manual Verification', 'Override Authority', 'Swarm Revocation'], health: 100, status: 'idle' }
   ];
 
   private initialPolicies: Policy[] = [
-    { id: 'pol-1', name: 'Dual-Agent Consensus Policy', description: 'Requires at least 2 validator agent signatures for medium-risk tasks.', requiredSignatures: 2 },
-    { id: 'pol-2', name: 'High-Value Financial Disbursement', description: 'Requires HITL approval and 3 validator signatures for high-risk operations.', requiredSignatures: 3 },
-    { id: 'pol-3', name: 'Standard IT Provisioning', description: 'Requires 1 signature witness for low-risk actions.', requiredSignatures: 1 }
+    { id: 'pol-1', name: 'Dual-Agent Consensus Policy', description: 'Requires at least 2 validating agents to co-sign transactions before execution.', requiredSignatures: 2 },
+    { id: 'pol-2', name: 'High-Value Financial Disbursement', description: 'Requires HITL approval and 3 validator node signatures for high-risk operations.', requiredSignatures: 3 },
+    { id: 'pol-3', name: 'IT IAM Privilege Escalation', description: 'Requires 3 signers including the Identity Agent and Trust Guardian for credentials changes.', requiredSignatures: 3 },
+    { id: 'pol-4', name: 'Standard Operational Clearance', description: 'Requires 1 signature witness for low-risk actions.', requiredSignatures: 1 }
   ];
 
   private mockTaskTemplates = [
     { title: 'Emergency Relocation Reimbursement', risk: 'high' as const, agentId: 'hr-agent' },
     { title: 'Rotate Database Root Credentials', risk: 'high' as const, agentId: 'it-agent' },
-    { title: 'Disburse Q3 Vendor Payments', risk: 'medium' as const, agentId: 'finance-agent' },
+    { title: 'Disburse Q3 Vendor Payments ($250k)', risk: 'high' as const, agentId: 'finance-agent' },
     { title: 'Provision Sandbox DB Workspace', risk: 'low' as const, agentId: 'it-agent' },
     { title: 'Process Standard Monthly Payroll', risk: 'medium' as const, agentId: 'hr-agent' },
-    { title: 'Re-audit Expense Claims (IT Hardware)', risk: 'low' as const, agentId: 'finance-agent' }
+    { title: 'Re-audit Expense Claims (IT Hardware)', risk: 'low' as const, agentId: 'finance-agent' },
+    { title: 'Execute Vendor NDA Verification', risk: 'medium' as const, agentId: 'legal-agent' },
+    { title: 'Ingest Global Cloud Licenses', risk: 'low' as const, agentId: 'procurement-agent' },
+    { title: 'Submit Regulatory Compliance Log', risk: 'high' as const, agentId: 'compliance-agent' },
+    { title: 'Issue Verifiable Credentials for Swarm Workers', risk: 'medium' as const, agentId: 'identity-agent' },
+    { title: 'Execute Swarm Consensus Validation Run', risk: 'low' as const, agentId: 'trust-guardian' }
   ];
 
   constructor(private securityService: SecurityService) {
@@ -102,10 +114,11 @@ export class SimulationService {
 
   private initializeDefaultTasks() {
     const tasks: Task[] = [
-      { id: 'task-101', title: 'Onboard Senior Director (Finance)', risk: 'medium', status: 'completed', assignedAgent: 'hr-agent' },
+      { id: 'task-101', title: 'Provision Senior HR Director Identity', risk: 'medium', status: 'completed', assignedAgent: 'identity-agent' },
       { id: 'task-102', title: 'Audit Global AWS Instance Billing', risk: 'low', status: 'completed', assignedAgent: 'finance-agent' },
       { id: 'task-103', title: 'Emergency Relocation Funds ($50k)', risk: 'high', status: 'awaiting-approval', assignedAgent: 'hr-agent' },
-      { id: 'task-104', title: 'Rotate API Keys for Payment Gateway', risk: 'high', status: 'in-progress', assignedAgent: 'finance-agent' }
+      { id: 'task-104', title: 'Rotate API Keys for Payment Gateway', risk: 'high', status: 'in-progress', assignedAgent: 'finance-agent' },
+      { id: 'task-105', title: 'Verify Vendor Procurement Master NDA', risk: 'medium', status: 'in-progress', assignedAgent: 'legal-agent' }
     ];
 
     this.tasksSubject.next(tasks);
@@ -114,8 +127,8 @@ export class SimulationService {
     const initialLogs: { [taskId: string]: string[] } = {
       'task-101': [
         'Task created.',
-        'Assigned to TalentFlow (HR Agent).',
-        'Handshake requested with ITAgent for profile creation.',
+        'Assigned to IDShield (Identity Agent).',
+        'Handshake requested with Sentinel Node for signature verification.',
         'Proof-of-Authority (PoA) signatures obtained.',
         'Task completed successfully.'
       ],
@@ -137,6 +150,12 @@ export class SimulationService {
         'Assigned to FinPulse (Finance Agent).',
         'Initiating rotation protocol.',
         'Verifying key permissions.'
+      ],
+      'task-105': [
+        'Task created.',
+        'Assigned to LexGuard (Legal Agent).',
+        'Reviewing SLA and NDA templates.',
+        'Verifying compliance against ISO 27001 policy.'
       ]
     };
     this.taskLogsSubject.next(initialLogs);
@@ -171,21 +190,21 @@ export class SimulationService {
           const stepIndex = logSteps.length;
           let newStepText = '';
           if (stepIndex === 2) {
-            newStepText = `[AGL] Policy Check: Traced delegation to human leader. Privilege escalation audit: Initiator does not exceed authority limits. Passed.`;
+            newStepText = `[TrustOS Ledger] Policy Verification: Identity checks completed. Privilege escalation audit: Initiator does not exceed authority limits. Passed.`;
           } else if (stepIndex === 3) {
             if (task.risk === 'high') {
               tasks[index] = { ...task, status: 'awaiting-approval' };
               tasksChanged = true;
-              newStepText = `[Sentinel] Threat check clear. [AGL] Zero-Knowledge Proof (ZKP) threshold validation compiled. Risk is HIGH: routed to Human-In-The-Loop (HITL) Desk.`;
+              newStepText = `[TrustOS Guardian] Threat signature scan clear. [ZKP Engine] Zero-Knowledge Proof (ZKP) threshold validation compiled. Risk is HIGH: routed to Human-In-The-Loop (HITL) Desk.`;
             } else {
-              newStepText = `[AGL] Consensus requested. Gathering Verifiable Credentials (VCs) and witness signatures from peer nodes...`;
+              newStepText = `[TrustOS Ledger] Consensus voting requested. Gathering Verifiable Credentials (VCs) and co-signatures from peer nodes...`;
             }
           } else if (stepIndex === 4) {
             // Low / Medium risks execute handshake directly
             this.executeHandshake(task);
             tasks[index] = { ...task, status: 'completed' };
             tasksChanged = true;
-            newStepText = `[AGL] Handshake consensus verified. ZKP cryptographic proof committed to decentralized ledger. Operation completed successfully.`;
+            newStepText = `[TrustOS Ledger] Consensus verified. ZKP cryptographic proof committed to Immutable Governance Ledger. Operation completed.`;
           }
           
           if (newStepText) {
@@ -331,13 +350,23 @@ export class SimulationService {
     const initiator = this.agentsSubject.value.find(a => a.id === initiatorId);
     const initiatorName = initiator ? initiator.name : 'Unknown Agent';
 
-    // Select target agent based on task type
+    // Select peer validator agent based on initiator type
     let targetId = 'security-agent';
     if (initiatorId === 'hr-agent') {
-      targetId = 'finance-agent';
+      targetId = 'legal-agent';
     } else if (initiatorId === 'finance-agent') {
-      targetId = 'security-agent';
+      targetId = 'compliance-agent';
     } else if (initiatorId === 'it-agent') {
+      targetId = 'identity-agent';
+    } else if (initiatorId === 'legal-agent') {
+      targetId = 'compliance-agent';
+    } else if (initiatorId === 'procurement-agent') {
+      targetId = 'finance-agent';
+    } else if (initiatorId === 'compliance-agent') {
+      targetId = 'trust-guardian';
+    } else if (initiatorId === 'identity-agent') {
+      targetId = 'security-agent';
+    } else if (initiatorId === 'trust-guardian') {
       targetId = 'security-agent';
     }
 
@@ -351,11 +380,11 @@ export class SimulationService {
     const isSuccess = !initiatorQuarantined && !targetQuarantined;
 
     // Determine signatures required based on risk
-    const signers = ['security-agent'];
+    const signers = ['security-agent', 'trust-guardian'];
     if (task.risk === 'high') {
-      signers.push('finance-agent', 'hr-agent');
+      signers.push('finance-agent', 'compliance-agent', 'identity-agent');
     } else if (task.risk === 'medium') {
-      signers.push(initiatorId === 'hr-agent' ? 'finance-agent' : 'hr-agent');
+      signers.push(initiatorId === 'hr-agent' ? 'legal-agent' : 'compliance-agent');
     }
 
     // Generate signatures list
@@ -369,14 +398,17 @@ export class SimulationService {
     });
 
     const delegators = [
-      { id: 'AD-101', name: 'AD-101 (VP of HR)' },
-      { id: 'AD-202', name: 'AD-202 (CFO)' },
-      { id: 'AD-303', name: 'AD-303 (VP of IT)' }
+      { id: 'DIR-101', name: 'DIR-101 (VP of Operations)' },
+      { id: 'DIR-202', name: 'DIR-202 (CISO)' },
+      { id: 'DIR-303', name: 'DIR-303 (Chief Legal Officer)' },
+      { id: 'DIR-404', name: 'DIR-404 (CFO)' }
     ];
     let delegator = delegators[0];
-    if (initiatorId === 'finance-agent') {
+    if (initiatorId === 'finance-agent' || initiatorId === 'procurement-agent') {
+      delegator = delegators[3];
+    } else if (initiatorId === 'it-agent' || initiatorId === 'identity-agent' || initiatorId === 'security-agent') {
       delegator = delegators[1];
-    } else if (initiatorId === 'it-agent') {
+    } else if (initiatorId === 'legal-agent' || initiatorId === 'compliance-agent') {
       delegator = delegators[2];
     }
 

@@ -2,17 +2,17 @@
   <!-- Top Control Bar -->
   <header class="app-header">
     <div class="logo-area">
-      <img src="assets/logo.png" alt="AscendOS Logo" class="logo-img" style="height: 36px; object-fit: contain; border-radius: 4px;" />
+      <img src="assets/logo.png" alt="Ascendo-OS Logo" class="logo-img" style="height: 36px; object-fit: contain; border-radius: 4px;" />
       <div class="title-container">
-        <h1>AscendOS</h1>
-        <span class="subtitle">Unified GCC Security Control Plane</span>
+        <h1>Ascendo-OS</h1>
+        <span class="subtitle">Agentic Governance Operating System — Trust Before Execution</span>
       </div>
     </div>
 
     <!-- Real-time alarm banner -->
     <div *ngIf="hasActiveThreat" class="alarm-banner">
       <span class="pulse-indicator"></span>
-      <span class="alarm-text">THREAT DETECTED: SUSPICIOUS ACTIVITY INTERCEPTED. SYSTEMS IN SAFE LOCKDOWN.</span>
+      <span class="alarm-text">INCIDENT: POLICY BREACH DETECTED. PRIVILEGE ESCALATION INTERCEPTED. CIRCUIT BREAKER ACTIVATED.</span>
       <button class="resolve-btn" (click)="resolveAlarm()">RESET SWARM</button>
     </div>
 
@@ -36,7 +36,7 @@
       <!-- System Sync Status -->
       <div class="status-pill">
         <span class="status-indicator" [class.status-active]="!hasActiveThreat" [class.status-danger]="hasActiveThreat"></span>
-        <span class="status-text">{{ hasActiveThreat ? 'SAFE SECURE' : 'SECURE' }}</span>
+        <span class="status-text">{{ hasActiveThreat ? 'SECURE LOCKDOWN' : 'TRUST VERIFIED' }}</span>
       </div>
     </div>
   </header>
@@ -52,8 +52,8 @@
             </svg>
           </div>
           <div class="nav-details">
-            <span class="nav-title">AWOS Console</span>
-            <span class="nav-desc">Human-AI Task Flow</span>
+            <span class="nav-title">Command Center</span>
+            <span class="nav-desc">Governance Workspace</span>
           </div>
           <span class="nav-badge" *ngIf="activeTally.pending > 0">{{ activeTally.pending }}</span>
         </a>
@@ -65,8 +65,8 @@
             </svg>
           </div>
           <div class="nav-details">
-            <span class="nav-title">AGL Governance</span>
-            <span class="nav-desc">Proof-of-Authority</span>
+            <span class="nav-title">Agent Registry</span>
+            <span class="nav-desc">Ledger & Credentials</span>
           </div>
         </a>
 
@@ -77,8 +77,8 @@
             </svg>
           </div>
           <div class="nav-details">
-            <span class="nav-title">Sentinel Control</span>
-            <span class="nav-desc">Cyber Resilience</span>
+            <span class="nav-title">Trust Dashboard</span>
+            <span class="nav-desc">Circuit Breakers & Metrics</span>
           </div>
           <span class="threat-dot" *ngIf="hasActiveThreat"></span>
         </a>
@@ -86,24 +86,24 @@
 
       <!-- Sidebar Status Card -->
       <div class="sidebar-card glass-panel">
-        <h4 class="card-title">GCC System Trust</h4>
+        <h4 class="card-title">Mesh Trust Score</h4>
         <div class="gauge-container">
           <div class="gauge-bar">
-            <div class="gauge-fill" [style.width.%]="hasActiveThreat ? 45 : 98" [class.danger]="hasActiveThreat"></div>
+            <div class="gauge-fill" [style.width.%]="hasActiveThreat ? 32 : 99" [class.danger]="hasActiveThreat"></div>
           </div>
           <div class="gauge-labels">
-            <span>Score</span>
-            <span class="gauge-val">{{ hasActiveThreat ? '45%' : '98%' }}</span>
+            <span>Integrity</span>
+            <span class="gauge-val">{{ hasActiveThreat ? '32%' : '99%' }}</span>
           </div>
         </div>
         <div class="stats-mini">
           <div class="stat-mini-item">
-            <span class="stat-mini-label">Completed Tasks</span>
+            <span class="stat-mini-label">Audited Blocks</span>
             <span class="stat-mini-val">{{ activeTally.completed }}</span>
           </div>
           <div class="stat-mini-item">
-            <span class="stat-mini-label">Active Agents</span>
-            <span class="stat-mini-val">4 / 4</span>
+            <span class="stat-mini-label">Active Nodes</span>
+            <span class="stat-mini-val">10 / 10</span>
           </div>
         </div>
       </div>

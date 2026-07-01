@@ -1,4 +1,4 @@
-# ⚡ AscendOS — Decentralized Agent-Governance Layer for GCC Digital Workforce
+# ⚡ Ascend-OS — Decentralized Agent-Governance Layer for GCC Digital Workforce
 
 > **Hackathon Theme:** Agentic Governance — *The Autonomous Enterprise*  
 > **Approach:** Proof-of-Authority (PoA) Consensus Model  
@@ -19,7 +19,7 @@
 
 ## 📸 Live Dashboard Preview
 
-![AscendOS Dashboard](ascendo-os/docs/media__1781762549659.png)
+![Ascend-OS Dashboard](ascendo-os/docs/media__1781762549659.png)
 
 *AWOS Console showing: Workforce Kanban board, active task execution pipelines, real-time node telemetry pinger, and simulated orchestrator logs.*
 
@@ -31,7 +31,7 @@
 
 In 2026, GCCs are increasingly powered by autonomous AI agents managing Finance, HR, IT, and Security. But these agents operate in silos — with **no secure way** to verify each other's authority. A single prompt-injected agent can authorize false disbursements, leak access credentials, or halt critical operations — and there's no mechanism to detect or stop it in real time.
 
-**AscendOS** solves this by unifying specialized swarm agents into one cryptographically-secured governance plane — incorporating Verifiable Credentials (VCs), Zero-Knowledge Proof (ZKP) policy validation, consensus-based handshakes, and human-led delegation traces.
+**Ascend-OS** solves this by unifying specialized swarm agents into one cryptographically-secured governance plane — incorporating Verifiable Credentials (VCs), Zero-Knowledge Proof (ZKP) policy validation, consensus-based handshakes, and human-led delegation traces.
 
 ---
 
@@ -39,7 +39,7 @@ In 2026, GCCs are increasingly powered by autonomous AI agents managing Finance,
 
 ```
 ┌───────────────────────────────────────────────────────────────────┐
-│                      AscendOS Control Plane                       │
+│                      Ascend-OS Control Plane                       │
 ├───────────────┬───────────────┬──────────────┬────────────────────┤
 │  Finance Agent│   HR Agent    │   IT Agent   │  Security Agent    │
 │  (FinPulse)   │ (TalentFlow)  │  (SysGuard)  │ (Sentinel Node)   │

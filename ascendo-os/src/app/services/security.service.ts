@@ -58,10 +58,14 @@ export class SecurityService {
   }
 
   private initializeHeartbeat() {
-    // Every 2 seconds, generate new metrics for our 4 agents
+    // Every 2 seconds, generate new metrics for our 10 agents
     interval(2000).subscribe(() => {
       const currentHistory = { ...this.metricsHistorySubject.value };
-      const agents = ['finance-agent', 'hr-agent', 'it-agent', 'security-agent'];
+      const agents = [
+        'finance-agent', 'hr-agent', 'it-agent', 'security-agent',
+        'legal-agent', 'procurement-agent', 'compliance-agent',
+        'identity-agent', 'trust-guardian', 'human-supervisor'
+      ];
       const quarantined = this.quarantinedAgentsSubject.value;
       const hasThreat = this.activeThreatSubject.value;
 

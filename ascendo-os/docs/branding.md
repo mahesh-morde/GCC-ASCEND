@@ -1,5 +1,5 @@
-# AscendOS Branding
+# Ascend-OS Branding
 
-![AscendOS Logo](logo.png)
+![Ascend-OS Logo](logo.png)
 
 *Logo created with a futuristic gradient and glass‑morphism style, optimized for dark‑theme UIs.*

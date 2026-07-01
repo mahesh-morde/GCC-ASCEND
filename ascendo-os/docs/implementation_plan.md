@@ -1,8 +1,8 @@
-# Implementation Plan: AscendOS - Unified GCC Orchestration & Security Control Plane (Angular Edition)
+# Implementation Plan: Ascend-OS - Unified GCC Orchestration & Security Control Plane (Angular Edition)
 
-This document details the plan to build **AscendOS**, a premium, high-fidelity interactive dashboard that showcases a complete solution for **GCC ASCEND (The Global Capability Innovation Buildathon)**. 
+This document details the plan to build **Ascend-OS**, a premium, high-fidelity interactive dashboard that showcases a complete solution for **GCC ASCEND (The Global Capability Innovation Buildathon)**. 
 
-AscendOS integrates the three hackathon tracks into a unified, visually striking enterprise web application:
+Ascend-OS integrates the three hackathon tracks into a unified, visually striking enterprise web application:
 1. **Augmented Workforce Operating System (AWOS):** Orchestrating tasks between human staff and autonomous AI agents.
 2. **Agentic Governance Layer (AGL):** Securing inter-agent handshakes via "Proof-of-Authority" (PoA) consensus protocols.
 3. **The Sentinel Layer (Cyber-Resilience):** intercepting prompt injections, signature spoofing, and hallucinations in real-time with "Behavioral Heartbeat" monitoring.

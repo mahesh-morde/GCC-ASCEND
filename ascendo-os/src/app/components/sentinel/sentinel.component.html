@@ -2,7 +2,7 @@
   <!-- Top Charts Section -->
   <div class="glass-panel analytics-card">
     <div class="card-header-actions">
-      <h3 class="section-title">Sentinel Behavioral Heartbeat Monitoring</h3>
+      <h3 class="section-title">TrustOS Behavioral Heartbeat Monitoring</h3>
       
       <!-- Agent selector for charts -->
       <div class="selector-container">
@@ -81,7 +81,7 @@
   <div class="sentinel-bottom-grid">
     <!-- Threat Injector Console -->
     <div class="glass-panel exploit-card">
-      <h3 class="section-title">Sentinel Threat Testing Matrix</h3>
+      <h3 class="section-title">Policy Violation & Threat Testing Matrix</h3>
       <p class="console-desc">Simulate common exploits against AI swarm agents to test fail-secure network containment.</p>
 
       <form (submit)="triggerExploit()" class="exploit-form">
@@ -97,22 +97,22 @@
         <div class="form-group">
           <label for="exploitType">Exploit Payload Vector</label>
           <select id="exploitType" [(ngModel)]="injectThreatType" name="threatType" class="form-select">
-            <option value="prompt-injection">Prompt Injection (System override attempt)</option>
-            <option value="signature-spoofing">Signature Spoofing (Cryptographic key mismatch)</option>
-            <option value="hallucination">AI Hallucination (Broken expense logic)</option>
+            <option value="prompt-injection">Privilege Escalation (Prompt Injection override)</option>
+            <option value="signature-spoofing">Identity Spoofing (Verifiable Credential mismatch)</option>
+            <option value="hallucination">Out-of-Bound Operation (Broken policy logic)</option>
           </select>
         </div>
 
         <div class="btn-group">
           <button type="submit" class="exploit-btn" [class.disabled]="quarantinedAgents.size === agents.length">INJECT EXPLOIT</button>
-          <button type="button" class="mitigate-btn" (click)="mitigateAll()" *ngIf="hasActiveThreat">MITIGATE ALL & SYNC</button>
+          <button type="button" class="mitigate-btn" (click)="mitigateAll()" *ngIf="hasActiveThreat">RESET CIRCUIT BREAKER</button>
         </div>
       </form>
     </div>
 
     <!-- Security Audit Log Table -->
     <div class="glass-panel security-log-card">
-      <h3 class="section-title">Real-Time Threat Audit Logs</h3>
+      <h3 class="section-title">Real-Time Governance Incident Logs</h3>
       <div class="log-table-wrapper">
         <table class="audit-log-table">
           <thead>
